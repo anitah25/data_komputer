@@ -138,9 +138,15 @@ foreach ($perangkat as $item) {
                 </h2>
             </div>
             <div class="col-md-6 d-flex justify-content-md-end align-items-center">
+                <?php if(isset($_SESSION['user_id'])): ?>
                 <a href="tambah-perangkat.php" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Tambah Perangkat Baru
                 </a>
+                <?php else: ?>
+                <a href="login.php" class="btn btn-outline-primary">
+                    <i class="bi bi-box-arrow-in-right"></i> Login untuk Mengelola Data
+                </a>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -165,14 +171,17 @@ foreach ($perangkat as $item) {
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="d-flex gap-2 justify-content-md-end">
-                                <select class="form-select w-auto" id="filterRuangan" name="filter_ruangan">
-                                    <option value="">Semua Ruangan</option>
-                                    <option value="Ruang Rapat" <?php echo ($filter_ruangan == 'Ruang Rapat') ? 'selected' : ''; ?>>Ruang Rapat</option>
-                                    <option value="Ruang Server" <?php echo ($filter_ruangan == 'Ruang Server') ? 'selected' : ''; ?>>Ruang Server</option>
-                                    <option value="Ruang Kerja" <?php echo ($filter_ruangan == 'Ruang Kerja') ? 'selected' : ''; ?>>Ruang Kerja</option>
-                                </select>
-                                <select class="form-select w-auto" id="filterKondisi" name="filter_kondisi">
+                            <div class="d-flex gap-3 justify-content-md-end filter-container">
+                                <div class="dropdown-select">
+                                    <select class="form-select filter-select" id="filterRuangan" name="filter_ruangan" style="min-width: 160px;">
+                                        <option value="">Semua Ruangan</option>
+                                        <option value="Ruang Rapat" <?php echo ($filter_ruangan == 'Ruang Rapat') ? 'selected' : ''; ?>>Ruang Rapat</option>
+                                        <option value="Ruang Server" <?php echo ($filter_ruangan == 'Ruang Server') ? 'selected' : ''; ?>>Ruang Server</option>
+                                        <option value="Ruang Kerja" <?php echo ($filter_ruangan == 'Ruang Kerja') ? 'selected' : ''; ?>>Ruang Kerja</option>
+                                    </select>
+                                </div>
+                                <div class="dropdown-select">
+                                    <select class="form-select filter-select" id="filterKondisi" name="filter_kondisi" style="min-width: 160px;">
                                     <option value="">Semua Kondisi</option>
                                     <option value="sangat_baik" <?php echo ($filter_kondisi == 'sangat_baik') ? 'selected' : ''; ?>>Sangat Baik</option>
                                     <option value="baik" <?php echo ($filter_kondisi == 'baik') ? 'selected' : ''; ?>>Baik</option>
@@ -180,6 +189,7 @@ foreach ($perangkat as $item) {
                                     <option value="kurang" <?php echo ($filter_kondisi == 'kurang') ? 'selected' : ''; ?>>Kurang</option>
                                     <option value="rusak" <?php echo ($filter_kondisi == 'rusak') ? 'selected' : ''; ?>>Rusak</option>
                                 </select>
+                                </div>
                                 <button type="submit" class="btn btn-outline-primary">
                                     <i class="bi bi-funnel"></i> Filter
                                 </button>
@@ -189,7 +199,7 @@ foreach ($perangkat as $item) {
                 </form>
 
                 <div class="table-responsive">
-                    <table class="table table-hover" id="perangkatTable">
+                    <table class="table table-hover shadow-sm" id="perangkatTable">
                         <thead class="table-light">
                             <tr>
                                 <th>No</th>
@@ -211,8 +221,16 @@ foreach ($perangkat as $item) {
                                 <?php foreach($perangkat as $index => $item): ?>
                                     <tr>
                                         <td><?php echo $index + 1; ?></td>
-                                        <td><?php echo htmlspecialchars($item['nomor_aset']); ?></td>
-                                        <td><?php echo htmlspecialchars($item['nomor_komputer']); ?></td>
+                                        <td>
+                                            <a href="detail-perangkat.php?id=<?php echo $item['id']; ?>" class="text-decoration-none">
+                                                <?php echo htmlspecialchars($item['nomor_aset']); ?>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="detail-perangkat.php?id=<?php echo $item['id']; ?>" class="text-decoration-none">
+                                                <?php echo htmlspecialchars($item['nomor_komputer']); ?>
+                                            </a>
+                                        </td>
                                         <td><?php echo htmlspecialchars($item['nama_ruangan']); ?></td>
                                         <td><?php echo htmlspecialchars($item['nama_pengguna']); ?></td>
                                         <td>
@@ -230,10 +248,14 @@ foreach ($perangkat as $item) {
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li><a class="dropdown-item" href="detail-perangkat.php?id=<?php echo $item['id']; ?>"><i class="bi bi-eye"></i> Detail</a></li>
+                                                    <?php if(isset($_SESSION['user_id'])): ?>
                                                     <li><a class="dropdown-item" href="edit-perangkat.php?id=<?php echo $item['id']; ?>"><i class="bi bi-pencil"></i> Edit</a></li>
+                                                    <?php endif; ?>
                                                     <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#barcodeModal<?php echo $item['id']; ?>"><i class="bi bi-upc-scan"></i> Lihat Barcode</a></li>
+                                                    <?php if(isset($_SESSION['user_id'])): ?>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $item['id']; ?>"><i class="bi bi-trash"></i> Hapus</a></li>
+                                                    <?php endif; ?>
                                                 </ul>
                                             </div>
                                             
@@ -382,6 +404,19 @@ foreach ($perangkat as $item) {
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
                 });
             });
+            
+            // Memastikan dropdown filter memiliki ruang yang cukup
+            function adjustFilterDropdowns() {
+                $('.filter-select').each(function() {
+                    var textWidth = $(this).find('option:selected').text().length * 8; // Perkiraan lebar teks
+                    var minWidth = Math.max(textWidth + 40, 160); // Tambahkan ruang untuk ikon (minimal 160px)
+                    $(this).css('min-width', minWidth + 'px');
+                });
+            }
+            
+            // Panggil saat halaman dimuat dan saat dropdown berubah
+            adjustFilterDropdowns();
+            $('.filter-select').on('change', adjustFilterDropdowns);
             
             // Generate barcodes for all barcode canvases
             $('.barcode-canvas').each(function() {

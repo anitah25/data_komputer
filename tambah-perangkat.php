@@ -1,6 +1,16 @@
 <?php
 // Session handling dan koneksi database bisa ditambahkan di sini
 session_start();
+
+// Cek apakah user sudah login
+if(!isset($_SESSION['user_id'])) {
+    // Set pesan bahwa akses ditolak
+    $_SESSION['error_message'] = "Anda harus login untuk mengakses halaman ini.";
+    // Redirect ke halaman login
+    header("Location: login.php");
+    exit();
+}
+
 // Contoh koneksi database (aktifkan saat sudah memiliki database)
 // $conn = mysqli_connect("localhost", "username", "password", "db_komputer_esdm");
 // if (!$conn) {
