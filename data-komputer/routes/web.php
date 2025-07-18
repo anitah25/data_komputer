@@ -2,15 +2,25 @@
 
 use Illuminate\Support\Facades\Route;
 
-//Route::get('/', function () {
-//    return view('welcome');
-//});
 
-//middleware("auth")->
-Route::prefix("admin")->group(function () {
+// Guest
+Route::middleware('guest')->group(function () {
+
+    Route::get('/login', [\App\Http\Controllers\Auth\AuthController::class, "login"])->name('login');
+    Route::post('/login', [\App\Http\Controllers\Auth\AuthController::class, "authenticate"])->name('login.post');
+
+    Route::get('/register', [\App\Http\Controllers\Auth\AuthController::class, "register"])->name('register');
+    Route::post('/register', [\App\Http\Controllers\Auth\AuthController::class, "store"])->name('register.post');
+});
+
+// Admin
+Route::prefix("admin")->middleware('auth')->group(function () {
     Route::get("/", function () {
         return view("admin.dashboard");
     })->name("admin.dashboard");
 
+    Route::post('/logout', [\App\Http\Controllers\Auth\AuthController::class, "logout"])->name('logout');
+
     Route::resource("komputer", App\Http\Controllers\Admin\KomputerController::class);
+
 });

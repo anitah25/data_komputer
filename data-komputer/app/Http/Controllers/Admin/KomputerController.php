@@ -3,7 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Komputer;
+use App\Service\Komputer\KomputerStore;
+use chillerlan\QRCode\Output\QRGdImagePNG;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class KomputerController extends Controller
 {
@@ -12,7 +19,12 @@ class KomputerController extends Controller
      */
     public function index()
     {
-        return view('admin.komputer.daftar');
+//        Mengambil data komputer dari database dengan pagination (10 item per halaman)
+        $komputers = Komputer::orderBy('created_at', 'desc')->paginate(10);
+        return view('admin.komputer.daftar',
+        [
+            'komputers' => $komputers,
+        ]);
     }
 
     /**
@@ -20,15 +32,45 @@ class KomputerController extends Controller
      */
     public function create()
     {
-        //
+        // Menampilkan form untuk menambahkan komputer baru
+        return view('admin.komputer.tambah');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, KomputerStore $komputerStore)
     {
-        //
+        DB::beginTransaction();
+        try {
+//            validasi data
+            $validated = $komputerStore->validateInput($request);
+
+//            generate barcode
+            $barcode = $komputerStore->generateQRCode($validated['nomor_aset']);
+            $validated['barcode'] = $barcode;
+
+//            simpan data komputer
+            $komputer = $komputerStore->storeKomputer($validated);
+
+//            simpan galeri foto
+            $komputerStore->storeGallery($komputer, $request);
+
+            DB::commit();
+
+            return redirect()
+                ->route('komputer.index')
+                ->with('success', 'Data komputer berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Change withErrors to with to match the check in the view
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal menambahkan data komputer: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**

@@ -22,7 +22,10 @@
                     <a class="nav-link {{ request()->is('admin/komputer') ? 'active' : ''}}" href="{{ route('komputer.index') }}"><i class="bi bi-list-ul"></i> Daftar Perangkat</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="logout.php"><i class="bi bi-box-arrow-right"></i> Keluar</a>
+                    <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
+                        @csrf
+                        <button type="submit" class="nav-link border-0 bg-transparent"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+                    </form>
                 </li>
             </ul>
         </div>

@@ -532,7 +532,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             </form>
             
             <div class="login-footer fade-in delay-3">
-                <p>&copy; <?php echo date('Y'); ?> Kementerian ESDM | SI-KOMPUTER ESDM v1.0</p>
+                <p>&copy; <?php echo date('Y'); ?> Dinas ESDM | SI-KOMPUTER ESDM v1.0</p>
             </div>
         </div>
     </div>
