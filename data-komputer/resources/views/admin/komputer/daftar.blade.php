@@ -2,6 +2,13 @@
 
 @section('content')
     <div class="container py-4">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                <strong><i class="bi bi-check-circle-fill me-2"></i>Success!</strong> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="row mb-4">
             <div class="col-md-6">
                 <h2 class="border-bottom pb-2">
@@ -117,7 +124,7 @@
                                             <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#barcodeModal-{{ $komputer->nomor_aset }}"><i class="bi bi-upc-scan"></i> Lihat Barcode</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
-                                                <form action="{{ route('komputer.destroy', $komputer->nomor_aset) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                                <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash"></i> Hapus</button>

@@ -36,6 +36,9 @@
                 <form id="formEditPerangkat" action="{{ route('komputer.update', $komputer->id) }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
                     @csrf
                     @method('PUT')
+
+                    <input type="hidden" name="old_nomor_aset" value="{{ $komputer->nomor_aset }}">
+
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h4 class="card-title mb-3">Data Identifikasi Perangkat</h4>
@@ -220,12 +223,12 @@
                         </div>
                     </div>
 
-                    {{-- <div class="row mb-4">
+                    <div class="row mb-4">
                         <div class="col-12">
                             <h4 class="card-title mb-3">Kondisi dan Pemeliharaan</h4>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="row col-12">
                             <div class="mb-3">
                                 <label for="kondisi_komputer" class="form-label">Keterangan Kondisi Komputer Saat Ini <span class="text-danger">*</span></label>
                                 <select class="form-select @error('kondisi_komputer') is-invalid @enderror" id="kondisi_komputer" name="kondisi_komputer" required>
@@ -258,7 +261,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="histori_pemeliharaan" class="form-label">Histori Pemeliharaan</label>
                                 <div class="alert alert-info">
@@ -287,8 +290,8 @@
                                     </div>
                                 @endif
                             </div>
-                        </div>
-                    </div> --}}
+                        </div> --}}
+                    </div>
 
                     <!-- Media dan Dokumentasi Section -->
                     <div class="row mb-4">

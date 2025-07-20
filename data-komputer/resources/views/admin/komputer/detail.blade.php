@@ -209,13 +209,20 @@
                         <a href="{{ route('komputer.edit', $komputer->nomor_aset) }}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil-square"></i> Edit Data
                         </a>
-                        <a href="#" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#tambahPemeliharaanModal">
+                        <a href="#" class="btn btn-outline-success" data-bs-toggle="modal"
+                            data-bs-target="#tambahPemeliharaanModal">
                             <i class="bi bi-tools"></i> Tambah Perbaikan
                         </a>
-                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
-                            data-bs-target="#deleteModal">
-                            <i class="bi bi-trash"></i> Hapus
-                        </button>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST" 
+                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i> Hapus
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -654,7 +661,7 @@
             </div>
         </div>
     </div>
-     --}}
+    --}}
     <!-- Delete Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -665,7 +672,8 @@
                 </div>
                 <div class="modal-body">
                     <p>Apakah Anda yakin ingin menghapus data perangkat dengan nomor aset
-                        <strong>{{ $komputer->nomor_aset }}</strong>?</p>
+                        <strong>{{ $komputer->nomor_aset }}</strong>?
+                    </p>
                     <p class="text-danger"><small>Tindakan ini tidak dapat dibatalkan.</small></p>
                 </div>
                 <div class="modal-footer">

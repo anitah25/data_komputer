@@ -255,18 +255,6 @@
                                 @enderror
                             </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="histori_pemeliharaan" class="form-label">Histori Pemeliharaan</label>
-                                <textarea class="form-control @error('histori_pemeliharaan') is-invalid @enderror" id="histori_pemeliharaan" name="histori_pemeliharaan" rows="6" placeholder="Contoh: 12/05/2023 - Penggantian RAM dari 4GB ke 8GB">{{ old('histori_pemeliharaan') }}</textarea>
-                                @error('histori_pemeliharaan')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Media dan Dokumentasi Section -->
