@@ -18,7 +18,7 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <form class="row mb-3" action="{{ route('komputer.index') }}" method="GET">
-                    <div class="col-md-4 mb-2 mb-md-0">
+                    <div class="col-md-5 mb-2 mb-md-0">
                         <div class="input-group">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-search"></i>
@@ -111,12 +111,13 @@
                                             Aksi
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="{{ route('komputer.show', $komputer->id) }}"><i class="bi bi-eye"></i> Detail</a></li>
-                                            <li><a class="dropdown-item" href="{{ route('komputer.edit', $komputer->id) }}"><i class="bi bi-pencil"></i> Edit</a></li>
-                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#barcodeModal-{{ $komputer->id }}"><i class="bi bi-upc-scan"></i> Lihat Barcode</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('komputer.show', $komputer->nomor_aset) }}"><i class="bi bi-eye"></i> Detail</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('komputer.edit', $komputer->nomor_aset) }}"><i class="bi bi-pencil"></i> Edit</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('komputer.edit', $komputer->nomor_aset) }}"><i class="bi bi-tools"></i> Riwayat Perbaikan</a></li>
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#barcodeModal-{{ $komputer->nomor_aset }}"><i class="bi bi-upc-scan"></i> Lihat Barcode</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
-                                                <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
+                                                <form action="{{ route('komputer.destroy', $komputer->nomor_aset) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash"></i> Hapus</button>

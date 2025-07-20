@@ -44,4 +44,11 @@ class KomputerGetData
             return Komputer::select('lokasi_penempatan')->distinct()->pluck('lokasi_penempatan');
         });
     }
+
+    public function getByNomorAset(string $nomor_aset)
+    {
+        return Cache::remember('komputer_' . $nomor_aset, now()->addHours(24), function () use ($nomor_aset) {
+            return Komputer::where('nomor_aset', $nomor_aset)->with('galleries')->firstOrFail();
+        });
+    }
 }

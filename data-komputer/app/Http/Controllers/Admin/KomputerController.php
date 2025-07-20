@@ -16,14 +16,23 @@ use Illuminate\Support\Facades\Storage;
 
 class KomputerController extends Controller
 {
+
+    private $komputerGetData;
+    private $komputerStore;
+
+    public function __construct(KomputerGetData $komputerGetData, KomputerStore $komputerStore)
+    {
+        $this->komputerGetData = $komputerGetData;
+        $this->komputerStore = $komputerStore;
+    }
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, KomputerGetData $komputerGetData)
+    public function index(Request $request)
     {
-        $komputers = $komputerGetData->getFilteredKomputers($request->all(), 10);
+        $komputers = $this->komputerGetData->getFilteredKomputers($request->all(), 10);
 
-        $ruangan = $komputerGetData->getUniqueRuangan();
+        $ruangan = $this->komputerGetData->getUniqueRuangan();
 
         return view(
             'admin.komputer.daftar',
@@ -46,22 +55,22 @@ class KomputerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, KomputerStore $komputerStore)
+    public function store(Request $request)
     {
         DB::beginTransaction();
         try {
             // validasi data
-            $validated = $komputerStore->validateInput($request);
+            $validated = $this->komputerStore->validateInput($request);
 
             // generate barcode
-            $barcode = $komputerStore->generateQRCode($validated['nomor_aset']);
+            $barcode = $this->komputerStore->generateQRCode($validated['nomor_aset']);
             $validated['barcode'] = $barcode;
 
             // simpan data komputer
-            $komputer = $komputerStore->storeKomputer($validated);
+            $komputer = $this->komputerStore->storeKomputer($validated);
 
             // simpan galeri foto
-            $komputerStore->storeGallery($komputer, $request);
+            $this->komputerStore->storeGallery($komputer, $request);
 
             DB::commit();
 
@@ -85,16 +94,18 @@ class KomputerController extends Controller
     public function show(string $nomor_aset)
     {
         return view('admin.komputer.detail', [
-            'komputer' => Komputer::findOrFail($nomor_aset),
+            'komputer' => $this->komputerGetData->getByNomorAset($nomor_aset),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $nomor_aset)
     {
-        //
+        return view('admin.komputer.edit', [
+            'komputer' => $this->komputerGetData->getByNomorAset($nomor_aset),
+        ]);
     }
 
     /**
