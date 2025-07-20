@@ -30,6 +30,7 @@ class Komputer extends Model
         'sistem_operasi',
         'nama_pengguna_sekarang',
         'kesesuaian_pc',
+        'kondisi_komputer',
         'keterangan_kondisi',
         'lokasi_penempatan',
         'barcode',

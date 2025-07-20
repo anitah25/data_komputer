@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Komputer;
+use App\Service\Komputer\KomputerGetData;
 use App\Service\Komputer\KomputerStore;
 use chillerlan\QRCode\Output\QRGdImagePNG;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,14 +19,19 @@ class KomputerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request, KomputerGetData $komputerGetData)
     {
-//        Mengambil data komputer dari database dengan pagination (10 item per halaman)
-        $komputers = Komputer::orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.komputer.daftar',
-        [
-            'komputers' => $komputers,
-        ]);
+        $komputers = $komputerGetData->getFilteredKomputers($request->all(), 10);
+
+        $ruangan = $komputerGetData->getUniqueRuangan();
+
+        return view(
+            'admin.komputer.daftar',
+            [
+                'komputers' => $komputers,
+                'ruangan' => $ruangan,
+            ]
+        );
     }
 
     /**
@@ -43,17 +50,17 @@ class KomputerController extends Controller
     {
         DB::beginTransaction();
         try {
-//            validasi data
+            // validasi data
             $validated = $komputerStore->validateInput($request);
 
-//            generate barcode
+            // generate barcode
             $barcode = $komputerStore->generateQRCode($validated['nomor_aset']);
             $validated['barcode'] = $barcode;
 
-//            simpan data komputer
+            // simpan data komputer
             $komputer = $komputerStore->storeKomputer($validated);
 
-//            simpan galeri foto
+            // simpan galeri foto
             $komputerStore->storeGallery($komputer, $request);
 
             DB::commit();
@@ -61,7 +68,6 @@ class KomputerController extends Controller
             return redirect()
                 ->route('komputer.index')
                 ->with('success', 'Data komputer berhasil ditambahkan.');
-
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -76,9 +82,11 @@ class KomputerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $nomor_aset)
     {
-        //
+        return view('admin.komputer.detail', [
+            'komputer' => Komputer::findOrFail($nomor_aset),
+        ]);
     }
 
     /**

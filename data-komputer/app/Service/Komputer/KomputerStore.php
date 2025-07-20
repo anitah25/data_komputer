@@ -36,6 +36,7 @@ class KomputerStore
             'sistem_operasi' => 'required|string|max:50',
             'nama_pengguna_sekarang' => 'nullable|string|max:100',
             'kesesuaian_pc' => 'required|string|max:50',
+            'kondisi_komputer' => 'required|string|max:50',
             'keterangan_kondisi' => 'required|string|max:255',
             'lokasi_penempatan' => 'required|string|max:100',
             'barcode' => 'nullable|string|max:100|unique:komputers,barcode',
@@ -45,28 +46,6 @@ class KomputerStore
 
         return $validated;
     }
-
-//    public function generateQRCode($nomor_aset)
-//    {
-//        $path = "barcode/{$nomor_aset}.png";
-////        generate barcode, return barcode image and store on storage/barcode
-//        $barcodeOptions = new QROptions([
-//            'outputInterface' => QRGdImagePNG::class,
-//            'version' => 7,
-//            'scale' => 500,
-//            'outputBase64' => false,
-//            'circleRadius' => 0.5,
-//        ]);
-//
-//        $qrCode = (new QRCode($barcodeOptions))->render("/scan/" . $nomor_aset);
-//        $storeQRCode = Storage::put($path, $qrCode);
-//        if (!$storeQRCode) {
-//            throw new Exception("Terjadi kesalahan saat membuat barcode!");
-//        }
-//
-////        menggembalikan tempat penyimpanan atau url barcode
-//        return $path;
-//    }
 
     public function generateQRCode($nomor_aset)
     {

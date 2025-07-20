@@ -120,6 +120,8 @@
       <excludeFolder url="file://$MODULE_DIR$/data-komputer/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/data-komputer/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/data-komputer/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/data-komputer/vendor/chillerlan/php-qrcode" />
+      <excludeFolder url="file://$MODULE_DIR$/data-komputer/vendor/chillerlan/php-settings-container" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

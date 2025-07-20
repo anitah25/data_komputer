@@ -17,36 +17,51 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6 mb-2 mb-md-0">
+                <form class="row mb-3" action="{{ route('komputer.index') }}" method="GET">
+                    <div class="col-md-4 mb-2 mb-md-0">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Cari perangkat...">
-                            <button class="btn btn-primary" type="button">
+                            <span class="input-group-text bg-light">
                                 <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" name="keyword" class="form-control" id="searchInput" 
+                                placeholder="Cari perangkat..." value="{{ request('keyword') }}">
+                            <button class="btn btn-primary" type="submit">
+                                Cari
                             </button>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <div class="d-flex gap-2 justify-content-md-end">
-                            <select class="form-select w-auto" id="filterRuangan">
-                                <option value="">Semua Ruangan</option>
-                                <option value="Ruang Rapat">Ruang Rapat</option>
-                                <option value="Ruang Server">Ruang Server</option>
-                                <option value="Ruang Kerja">Ruang Kerja</option>
-                            </select>
-                            <select class="form-select w-auto" id="filterKondisi">
-                                <option value="">Semua Kondisi</option>
-                                <option value="Sangat Baik">Sangat Baik</option>
-                                <option value="Baik">Baik</option>
-                                <option value="Cukup">Cukup</option>
-                                <option value="Kurang">Kurang</option>
-                                <option value="Rusak">Rusak</option>
-                            </select>
+                            <div class="input-group flex-nowrap" style="min-width: 260px;">
+                                <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                                <select class="form-select" name="ruangan" id="filterRuangan" onchange="this.form.submit()">
+                                    <option value="">Semua Ruangan</option>
+                                    @foreach ($ruangan as $item)
+                                        <option value="{{ $item }}" {{ request('ruangan') == $item ? 'selected' : '' }}>{{ $item }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="input-group flex-nowrap" style="max-width: 220px;">
+                                <span class="input-group-text bg-light"><i class="bi bi-reception-4"></i></span>
+                                <select class="form-select" name="kondisi" id="filterKondisi" onchange="this.form.submit()">
+                                    <option value="">Semua Kondisi</option>
+                                    <option value="Sangat Baik" {{ request('kondisi') == 'Sangat Baik' ? 'selected' : '' }}>Sangat Baik</option>
+                                    <option value="Baik" {{ request('kondisi') == 'Baik' ? 'selected' : '' }}>Baik</option>
+                                    <option value="Cukup" {{ request('kondisi') == 'Cukup' ? 'selected' : '' }}>Cukup</option>
+                                    <option value="Kurang" {{ request('kondisi') == 'Kurang' ? 'selected' : '' }}>Kurang</option>
+                                    <option value="Rusak" {{ request('kondisi') == 'Rusak' ? 'selected' : '' }}>Rusak</option>
+                                </select>
+                            </div>
+                            @if(request('keyword') || request('ruangan') || request('kondisi'))
+                                <a href="{{ route('komputer.index') }}" class="btn btn-outline-secondary" title="Reset filter">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
+                            @endif
                         </div>
                     </div>
-                </div>
+                </form>
 
-                <div class="table-responsive">
+                <div class="">
                     <table class="table table-hover" id="perangkatTable">
                         <thead class="table-light">
                         <tr>
@@ -76,12 +91,18 @@
                                     </small>
                                 </td>
                                 <td>
-                                    @if(str_contains(strtolower($komputer->kesesuaian_pc), 'sesuai'))
-                                        <span class="badge bg-success">{{ $komputer->kesesuaian_pc }}</span>
-                                    @elseif(str_contains(strtolower($komputer->kesesuaian_pc), 'kurang'))
-                                        <span class="badge bg-warning text-dark">{{ $komputer->kesesuaian_pc }}</span>
+                                    @if($komputer->kondisi_komputer == 'Sangat Baik')
+                                        <span class="badge bg-success">{{ $komputer->kondisi_komputer }}</span>
+                                    @elseif($komputer->kondisi_komputer == 'Baik')
+                                        <span class="badge bg-success-subtle text-success-emphasis">{{ $komputer->kondisi_komputer }}</span>
+                                    @elseif($komputer->kondisi_komputer == 'Cukup')
+                                        <span class="badge bg-info">{{ $komputer->kondisi_komputer }}</span>
+                                    @elseif($komputer->kondisi_komputer == 'Kurang')
+                                        <span class="badge bg-warning text-dark">{{ $komputer->kondisi_komputer }}</span>
+                                    @elseif($komputer->kondisi_komputer == 'Rusak')
+                                        <span class="badge bg-danger">{{ $komputer->kondisi_komputer }}</span>
                                     @else
-                                        <span class="badge bg-danger">{{ $komputer->kesesuaian_pc }}</span>
+                                        <span class="badge bg-secondary">{{ $komputer->kondisi_komputer ?? 'Tidak Diketahui' }}</span>
                                     @endif
                                 </td>
                                 <td>
@@ -92,7 +113,7 @@
                                         <ul class="dropdown-menu">
                                             <li><a class="dropdown-item" href="{{ route('komputer.show', $komputer->id) }}"><i class="bi bi-eye"></i> Detail</a></li>
                                             <li><a class="dropdown-item" href="{{ route('komputer.edit', $komputer->id) }}"><i class="bi bi-pencil"></i> Edit</a></li>
-                                            <li><a class="dropdown-item" href="#"><i class="bi bi-upc-scan"></i> Lihat Barcode</a></li>
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#barcodeModal-{{ $komputer->id }}"><i class="bi bi-upc-scan"></i> Lihat Barcode</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
                                                 <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
@@ -102,6 +123,41 @@
                                                 </form>
                                             </li>
                                         </ul>
+                                    </div>
+                                    
+                                    <!-- Barcode Modal -->
+                                    <div class="modal fade" id="barcodeModal-{{ $komputer->id }}" tabindex="-1" aria-labelledby="barcodeModalLabel-{{ $komputer->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="barcodeModalLabel-{{ $komputer->id }}">Barcode Komputer: {{ $komputer->nama_komputer }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    @if($komputer->barcode && Storage::disk('public')->exists($komputer->barcode))
+                                                        <div class="mb-3">
+                                                            <img src="{{ Storage::url($komputer->barcode) }}" alt="Barcode {{ $komputer->nomor_aset }}" class="img-fluid">
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <p class="mb-1"><strong>Nomor Aset:</strong> {{ $komputer->nomor_aset }}</p>
+                                                            <p class="mb-1"><strong>Nama Komputer:</strong> {{ $komputer->nama_komputer }}</p>
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-warning">
+                                                            <i class="bi bi-exclamation-triangle"></i> Barcode belum tersedia untuk komputer ini.
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="modal-footer">
+                                                    @if($komputer->barcode && Storage::disk('public')->exists($komputer->barcode))
+                                                        <button type="button" class="btn btn-primary" onclick="printBarcode('{{ Storage::url($komputer->barcode) }}', '{{ $komputer->nomor_aset }}', '{{ $komputer->nama_komputer }}')">
+                                                            <i class="bi bi-printer"></i> Print Barcode
+                                                        </button>
+                                                    @endif
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -134,4 +190,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Add JavaScript for printing barcode -->
+    {{-- <script>
+        function printBarcode(barcodeUrl, assetNumber, computerName) {
+            const printWindow = window.open('', '_blank');
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Barcode</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; }
+                        .container { margin: 20px auto; max-width: 400px; }
+                        img { max-width: 100%; height: auto; }
+                        p { margin: 5px 0; font-size: 14px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="mb-3">
+                            <img src="${barcodeUrl}" alt="Barcode ${assetNumber}" class="img-fluid">
+                        </div>
+                        <div class="mt-2">
+                            <p class="mb-1"><strong>Nomor Aset:</strong> ${assetNumber}</p>
+                            <p class="mb-1"><strong>Nama Komputer:</strong> ${computerName}</p>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); }
+                    </script>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+        }
+    </script> --}}
 @endsection

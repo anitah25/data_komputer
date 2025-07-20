@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('sistem_operasi');
             $table->string('nama_pengguna_sekarang');
             $table->string('kesesuaian_pc');
+            $table->string('kondisi_komputer');
             $table->string('keterangan_kondisi');
             $table->string('lokasi_penempatan');
             $table->string('barcode');

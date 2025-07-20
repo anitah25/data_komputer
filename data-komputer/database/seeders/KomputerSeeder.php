@@ -95,7 +95,7 @@ class KomputerSeeder extends Seeder
         // Daftar kesesuaian PC
         $suitability = ['Sesuai', 'Kurang Sesuai', 'Tidak Sesuai', 'Perlu Upgrade'];
 
-        // Daftar kondisi
+        // Daftar kondisi untuk keterangan kondisi
         $conditions = [
             'Baik dan berfungsi normal',
             'Baik, dengan beberapa masalah minor',
@@ -106,6 +106,18 @@ class KomputerSeeder extends Seeder
             'Keyboard tidak berfungsi dengan baik',
             'Overheating pada penggunaan berat',
         ];
+        
+        // Daftar kondisi komputer sesuai form tambah
+        $kondisiKomputer = [
+            'Sangat Baik',
+            'Baik',
+            'Cukup',
+            'Kurang',
+            'Rusak',
+        ];
+        
+        // Daftar nama file barcode yang tersedia
+        $barcodeFiles = ['ausdas.png', 'fasaf.png'];
 
         // Buat 50 data random untuk aset komputer
         for ($i = 0; $i < 50; $i++) {
@@ -119,6 +131,10 @@ class KomputerSeeder extends Seeder
 
             // Pilih user acak sebagai pengguna saat ini
             $currentUser = $users->random()->nama_lengkap;
+            
+            // Pilih file barcode acak
+            $barcodeFile = $barcodeFiles[array_rand($barcodeFiles)];
+            $barcodePath = 'barcode/' . $barcodeFile;
 
             Komputer::create([
                 'user_id' => $adminUser->id,
@@ -133,9 +149,10 @@ class KomputerSeeder extends Seeder
                 'sistem_operasi' => $osList[array_rand($osList)],
                 'nama_pengguna_sekarang' => $currentUser,
                 'kesesuaian_pc' => $suitability[array_rand($suitability)],
+                'kondisi_komputer' => $kondisiKomputer[array_rand($kondisiKomputer)],
                 'keterangan_kondisi' => $conditions[array_rand($conditions)],
                 'lokasi_penempatan' => $locations[array_rand($locations)],
-                'barcode' => 'BAR' . strtoupper(substr(md5($assetNumber), 0, 10)),
+                'barcode' => $barcodePath,
             ]);
         }
     }
