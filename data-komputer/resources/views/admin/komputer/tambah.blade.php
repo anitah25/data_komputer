@@ -38,9 +38,14 @@
                         <div class="col-md-6">
                             <h4 class="card-title mb-3">Data Identifikasi Perangkat</h4>
                             <div class="mb-3">
-                                <label for="lokasi_penempatan" class="form-label">Nama Ruangan <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('lokasi_penempatan') is-invalid @enderror" id="lokasi_penempatan" name="lokasi_penempatan" value="{{ old('lokasi_penempatan') }}" placeholder="Contoh: Ruang Rapat Lt.1" required>
-                                @error('lokasi_penempatan')
+                                <label for="ruangan_id" class="form-label">Nama Ruangan <span class="text-danger">*</span></label>
+                                <select class="form-select @error('ruangan_id') is-invalid @enderror" id="ruangan_id" name="ruangan_id" required>
+                                    <option value="" selected disabled>-- Pilih Ruangan --</option>
+                                    @foreach ($ruangans as $ruangan)
+                                        <option value="{{ $ruangan->id }}" {{ old('ruangan_id') == $ruangan->id ? 'selected' : '' }}>{{ $ruangan->nama_ruangan }}</option>
+                                    @endforeach
+                                </select>
+                                @error('ruangan_id')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
@@ -52,15 +57,15 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="nomor_aset" class="form-label">Nomor Aset <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('nomor_aset') is-invalid @enderror" id="nomor_aset" name="nomor_aset" value="{{ old('nomor_aset') }}" placeholder="Contoh: ESDM-PC-001" required>
-                                @error('nomor_aset')
+                                <label for="kode_barang" class="form-label">Kode Barang <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang" name="kode_barang" value="{{ old('kode_barang') }}" placeholder="Contoh: ESDM-PC-001" required>
+                                @error('kode_barang')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
                                 @else
                                     <div class="invalid-feedback">
-                                        Nomor aset wajib diisi
+                                        Kode barang wajib diisi
                                     </div>
                                 @enderror
                             </div>

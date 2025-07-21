@@ -13,14 +13,24 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Buat user admin utama
+        // Create superadmin user
+        User::create([
+            'username' => 'superadmin',
+            'password' => Hash::make('superadmin123'),
+            'nama_lengkap' => 'Super Administrator',
+            'email' => 'superadmin@esdm.go.id',
+            'role' => 'superadmin',
+            'last_login' => null,
+        ]);
+
+        // Create admin user
         User::create([
             'username' => 'admin',
-            'nama_lengkap' => 'Administrator Utama',
-            'email' => 'admin@esdm.go.id',
             'password' => Hash::make('admin123'),
+            'nama_lengkap' => 'Administrator',
+            'email' => 'admin@esdm.go.id',
             'role' => 'admin',
-            'last_login' => now(),
+            'last_login' => null,
         ]);
 
         // Array untuk role-role berdasarkan gambar

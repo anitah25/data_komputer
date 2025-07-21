@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\IsSuperAdmin;
 use Illuminate\Support\Facades\Route;
 
 
@@ -14,13 +15,20 @@ Route::middleware('guest')->group(function () {
 });
 
 // Admin
-Route::prefix("admin")->middleware('auth')->group(function () {
+Route::prefix("admin")->middleware(['auth'])->group(function () {
     Route::get("/", function () {
         return view("admin.dashboard");
     })->name("admin.dashboard");
 
     Route::post('/logout', [\App\Http\Controllers\Auth\AuthController::class, "logout"])->name('logout');
 
-    Route::resource("komputer", App\Http\Controllers\Admin\KomputerController::class);
+
+    Route::middleware(IsSuperAdmin::class)->group(function () {
+        Route::resource("komputer", App\Http\Controllers\Admin\KomputerController::class);
+    });
+    
+    Route::resource("komputer", App\Http\Controllers\Admin\KomputerController::class)->only(['index', 'show']);
+    Route::resource("komputer.riwayat", App\Http\Controllers\Admin\RiwayatPerbaikanKomputerController::class)->only(['index', 'show']);
+
 
 });

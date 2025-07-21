@@ -25,7 +25,7 @@ class KomputerStore
     public function validateInput(Request $request)
     {
         $validated = $request->validate([
-            'nomor_aset' => 'required|string|max:50|unique:komputers,nomor_aset',
+            'kode_barang' => 'required|string|max:50|unique:komputers,kode_barang',
             'nama_komputer' => 'required|string|max:100',
             'merek_komputer' => 'required|string|max:50',
             'tahun_pengadaan' => 'required|integer|min:2000|max:' . date('Y'),
@@ -38,7 +38,8 @@ class KomputerStore
             'kesesuaian_pc' => 'required|string|max:50',
             'kondisi_komputer' => 'required|string|max:50',
             'keterangan_kondisi' => 'required|string|max:255',
-            'lokasi_penempatan' => 'required|string|max:100',
+            'penggunaan_sekarang' => 'required|string|max:100',
+            'ruangan_id' => 'required|exists:ruangans,id',
             'barcode' => 'nullable|string|max:100|unique:komputers,barcode',
             'foto' => 'required|array',
             'foto.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:10048', // Maksimal 10MB per foto
@@ -47,11 +48,11 @@ class KomputerStore
         return $validated;
     }
 
-    public function generateQRCode($nomor_aset)
+    public function generateQRCode($kode_barang)
     {
         // Path yang akan digunakan untuk menyimpan QR code
         $directory = 'barcode';
-        $filename = "{$nomor_aset}.png";
+        $filename = "{$kode_barang}.png";
         $path = "{$directory}/{$filename}";
 
         // Konfigurasi QR code
@@ -72,7 +73,7 @@ class KomputerStore
 
         // Generate QR code dengan URL scan yang lengkap
         $baseUrl = '/scan'; // Menggunakan helper url() Laravel
-        $fullUrl = "{$baseUrl}/{$nomor_aset}";
+        $fullUrl = "{$baseUrl}/{$kode_barang}";
 
         // Buat objek QR code
         $qrCode = new QRCode($barcodeOptions);

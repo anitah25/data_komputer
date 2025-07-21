@@ -22,7 +22,7 @@ class KomputerGetData
         if (!empty($filters['keyword'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('nama_komputer', 'like', '%' . $filters['keyword'] . '%')
-                    ->orWhere('nomor_aset', 'like', '%' . $filters['keyword'] . '%')
+                    ->orWhere('kode_barang', 'like', '%' . $filters['keyword'] . '%')
                     ->orWhere('merek_komputer', 'like', '%' . $filters['keyword'] . '%');
             });
         }
@@ -32,7 +32,7 @@ class KomputerGetData
         }
         
         if (!empty($filters['ruangan'])) {
-            $query->where('lokasi_penempatan', $filters['ruangan']);
+            $query->where('ruangan_id', $filters['ruangan']);
         }
         
         return $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
@@ -41,14 +41,14 @@ class KomputerGetData
     public function getUniqueRuangan()
     {
         return Cache::remember('ruangan_list', now()->addHours(24), function () {
-            return Komputer::select('lokasi_penempatan')->distinct()->pluck('lokasi_penempatan');
+            return \App\Models\Ruangan::orderBy('nama_ruangan')->get();
         });
     }
 
-    public function getByNomorAset(string $nomor_aset)
+    public function getByKodeBarang(string $kode_barang)
     {
-        return Cache::remember('komputer_' . $nomor_aset, now()->addHours(24), function () use ($nomor_aset) {
-            return Komputer::where('nomor_aset', $nomor_aset)->with('galleries')->firstOrFail();
+        return Cache::remember('komputer_' . $kode_barang, now()->addHours(24), function () use ($kode_barang) {
+            return Komputer::where('kode_barang', $kode_barang)->with('galleries')->firstOrFail();
         });
     }
 }

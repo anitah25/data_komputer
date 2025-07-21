@@ -24,7 +24,7 @@ class KomputerUpdate
     public function validateInput(Request $request, $id)
     {
         $validated = $request->validate([
-            'nomor_aset' => [
+            'kode_barang' => [
                 'required', 
                 'string', 
                 'max:50',
@@ -42,7 +42,8 @@ class KomputerUpdate
             'kesesuaian_pc' => 'required|string|max:50',
             'kondisi_komputer' => 'required|string|max:50',
             'keterangan_kondisi' => 'required|string|max:255',
-            'lokasi_penempatan' => 'required|string|max:100',
+            'penggunaan_sekarang' => 'required|string|max:100',
+            'ruangan_id' => 'required|exists:ruangans,id',
             'foto.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:gallery_komputers,id',
@@ -60,7 +61,7 @@ class KomputerUpdate
         $komputer->update($data);
 
         // Clear cache for this computer
-        Cache::forget('komputer_' . $komputer->nomor_aset);
+        Cache::forget('komputer_' . $komputer->kode_barang);
         Cache::forget('ruangan_list');
 
         return $komputer;

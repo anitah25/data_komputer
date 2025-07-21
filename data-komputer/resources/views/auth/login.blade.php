@@ -57,7 +57,7 @@
                 @csrf
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="email" name="email" class="form-control m-0" placeholder="Email" required autofocus>
+                    <input type="text" name="username" class="form-control m-0" placeholder="Username" required autofocus>
                 </div>
 
                 <div class="input-group">

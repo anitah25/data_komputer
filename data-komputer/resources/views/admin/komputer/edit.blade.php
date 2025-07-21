@@ -7,7 +7,7 @@
                 <h2 class="border-bottom pb-2">
                     <i class="bi bi-pencil-square text-primary"></i> Edit Data Perangkat Komputer
                 </h2>
-                <p class="text-muted">Nomor Aset: {{ $komputer->nomor_aset }}</p>
+                <p class="text-muted">Kode Barang: {{ $komputer->kode_barang }}</p>
             </div>
         </div>
 
@@ -37,15 +37,20 @@
                     @csrf
                     @method('PUT')
 
-                    <input type="hidden" name="old_nomor_aset" value="{{ $komputer->nomor_aset }}">
+                    <input type="hidden" name="old_kode_barang" value="{{ $komputer->kode_barang }}">
 
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h4 class="card-title mb-3">Data Identifikasi Perangkat</h4>
                             <div class="mb-3">
-                                <label for="lokasi_penempatan" class="form-label">Nama Ruangan <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('lokasi_penempatan') is-invalid @enderror" id="lokasi_penempatan" name="lokasi_penempatan" value="{{ old('lokasi_penempatan', $komputer->lokasi_penempatan) }}" placeholder="Contoh: Ruang Rapat Lt.1" required>
-                                @error('lokasi_penempatan')
+                                <label for="ruangan_id" class="form-label">Nama Ruangan <span class="text-danger">*</span></label>
+                                <select class="form-select @error('ruangan_id') is-invalid @enderror" id="ruangan_id" name="ruangan_id" required>
+                                    <option value="" disabled>-- Pilih Ruangan --</option>
+                                    @foreach ($ruangans as $ruangan)
+                                        <option value="{{ $ruangan->id }}" {{ old('ruangan_id', $komputer->ruangan_id) == $ruangan->id ? 'selected' : '' }}>{{ $ruangan->nama_ruangan }}</option>
+                                    @endforeach
+                                </select>
+                                @error('ruangan_id')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
@@ -57,15 +62,15 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="nomor_aset" class="form-label">Nomor Aset <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('nomor_aset') is-invalid @enderror" id="nomor_aset" name="nomor_aset" value="{{ old('nomor_aset', $komputer->nomor_aset) }}" placeholder="Contoh: ESDM-PC-001" required>
-                                @error('nomor_aset')
+                                <label for="kode_barang" class="form-label">Kode Barang <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control @error('kode_barang') is-invalid @enderror" id="kode_barang" name="kode_barang" value="{{ old('kode_barang', $komputer->kode_barang) }}" placeholder="Contoh: ESDM-PC-001" required>
+                                @error('kode_barang')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
                                 @else
                                     <div class="invalid-feedback">
-                                        Nomor aset wajib diisi
+                                        Kode barang wajib diisi
                                     </div>
                                 @enderror
                             </div>
@@ -126,15 +131,19 @@
                                 @enderror
                             </div>
 
-                            {{-- <div class="mb-3">
-                                <label for="penggunaan_sekarang" class="form-label">Penggunaan Sekarang</label>
-                                <textarea class="form-control @error('penggunaan_sekarang') is-invalid @enderror" id="penggunaan_sekarang" name="penggunaan_sekarang" rows="3">{{ old('penggunaan_sekarang', $komputer->penggunaan_sekarang) }}</textarea>
+                            <div class="mb-3">
+                                <label for="penggunaan_sekarang" class="form-label">Penggunaan Sekarang <span class="text-danger">*</span></label>
+                                <textarea class="form-control @error('penggunaan_sekarang') is-invalid @enderror" id="penggunaan_sekarang" name="penggunaan_sekarang" rows="3" required>{{ old('penggunaan_sekarang', $komputer->penggunaan_sekarang) }}</textarea>
                                 @error('penggunaan_sekarang')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
+                                @else
+                                    <div class="invalid-feedback">
+                                        Penggunaan sekarang wajib diisi
+                                    </div>
                                 @enderror
-                            </div> --}}
+                            </div>
                         </div>
 
                         <div class="col-md-6">

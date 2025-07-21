@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\Komputer;
+use App\Models\Ruangan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class KomputerSeeder extends Seeder
 {
@@ -13,28 +15,6 @@ class KomputerSeeder extends Seeder
      */
     public function run(): void
     {
-        // Dapatkan semua user untuk dijadikan admin yang menambahkan aset
-        $users = User::all();
-
-        // Daftar lokasi penempatan yang mungkin
-        $locations = [
-            'Kantor Pusat Lt.1',
-            'Kantor Pusat Lt.2',
-            'Kantor Pusat Lt.3',
-            'Laboratorium',
-            'Kantor Cabang Solo',
-            'Kantor Cabang Serayu Tengah',
-            'Kantor Cabang Merapi',
-            'Kantor Cabang Kendeng Selatan',
-            'Kantor Cabang Sewu Lawu',
-            'Kantor Cabang Slamet Selatan',
-            'Kantor Cabang Kendeng Muria',
-            'Kantor Cabang Slamet Utara',
-            'Kantor Cabang Ungaran Telomoyo',
-            'Kantor Cabang Serayu Selatan',
-            'Kantor Cabang Serayu Utara',
-        ];
-
         // Daftar merek komputer
         $brands = ['Lenovo', 'HP', 'Dell', 'Asus', 'Acer', 'MSI', 'Apple', 'Samsung', 'Toshiba'];
 
@@ -119,6 +99,13 @@ class KomputerSeeder extends Seeder
         // Daftar nama file barcode yang tersedia
         $barcodeFiles = ['ausdas.png', 'fasaf.png'];
 
+        // Ambil ID dari user dan ruangan
+        $userIds = DB::table('users')->pluck('id')->toArray();
+        $ruanganIds = DB::table('ruangans')->pluck('id')->toArray();
+        
+        // Ambil nama lengkap dari user untuk digunakan sebagai pengguna
+        $userNames = DB::table('users')->pluck('nama_lengkap')->toArray();
+
         // Buat 50 data random untuk aset komputer
         for ($i = 0; $i < 50; $i++) {
             $assetNumber = 'ESDM-PC-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
@@ -127,18 +114,38 @@ class KomputerSeeder extends Seeder
             $computerName = $brand . '-' . strtoupper(substr(md5(microtime()), 0, 6));
 
             // Pilih user acak sebagai admin yang menambahkan
-            $adminUser = $users->random();
+            $userId = $userIds[array_rand($userIds)];
 
-            // Pilih user acak sebagai pengguna saat ini
-            $currentUser = $users->random()->nama_lengkap;
+            // Pilih nama user acak sebagai pengguna saat ini
+            $currentUser = $userNames[array_rand($userNames)];
+            
+            // Daftar penggunaan sekarang
+            $penggunaanOptions = [
+                'Operasional Kantor',
+                'Administrasi',
+                'Desain Grafis',
+                'Pengolahan Data',
+                'Riset dan Pengembangan',
+                'Video Conference',
+                'Presentasi',
+                'GIS dan Pemetaan',
+                'Simulasi',
+                'Analisa Data'
+            ];
+            
+            // Pilih penggunaan acak
+            $penggunaan = $penggunaanOptions[array_rand($penggunaanOptions)];
+            
+            // Pilih ruangan acak
+            $ruanganId = $ruanganIds[array_rand($ruanganIds)];
             
             // Pilih file barcode acak
             $barcodeFile = $barcodeFiles[array_rand($barcodeFiles)];
             $barcodePath = 'barcode/' . $barcodeFile;
 
             Komputer::create([
-                'user_id' => $adminUser->id,
-                'nomor_aset' => $assetNumber,
+                'user_id' => $userId,
+                'kode_barang' => $assetNumber,
                 'nama_komputer' => $computerName,
                 'merek_komputer' => $brand,
                 'tahun_pengadaan' => $year,
@@ -151,7 +158,8 @@ class KomputerSeeder extends Seeder
                 'kesesuaian_pc' => $suitability[array_rand($suitability)],
                 'kondisi_komputer' => $kondisiKomputer[array_rand($kondisiKomputer)],
                 'keterangan_kondisi' => $conditions[array_rand($conditions)],
-                'lokasi_penempatan' => $locations[array_rand($locations)],
+                'penggunaan_sekarang' => $penggunaan,
+                'ruangan_id' => $ruanganId,
                 'barcode' => $barcodePath,
             ]);
         }

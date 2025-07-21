@@ -9,22 +9,30 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <?php
-                // Dapatkan nama file saat ini
-                $current_page = basename($_SERVER['PHP_SELF']);
+// Dapatkan nama file saat ini
+$current_page = basename($_SERVER['PHP_SELF']);
                 ?>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('admin') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-house"></i> Beranda</a>
+                    <a class="nav-link {{ request()->is('admin') ? 'active' : '' }}"
+                        href="{{ route('admin.dashboard') }}"><i class="bi bi-house"></i> Beranda</a>
                 </li>
+                @can ('superadmin', auth()->user())
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('komputer.create') ? 'active' : ''}}"
+                            href="{{ route('komputer.create') }}"><i class="bi bi-plus-circle"></i> Tambah Perangkat</a>
+                    </li>
+
+                @endcan
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('admin/komputer/tambah') ? 'active' : ''}}" href="{{ route('komputer.create') }}"><i class="bi bi-plus-circle"></i> Tambah Perangkat</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->is('admin/komputer') ? 'active' : ''}}" href="{{ route('komputer.index') }}"><i class="bi bi-list-ul"></i> Daftar Perangkat</a>
+                    <a class="nav-link {{ request()->routeIs('komputer.index') ? 'active' : ''}}"
+                        href="{{ route('komputer.index') }}"><i class="bi bi-list-ul"></i> Daftar Perangkat</a>
                 </li>
                 <li class="nav-item">
                     <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
                         @csrf
-                        <button type="submit" class="nav-link border-0 bg-transparent"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+                        <button type="submit" class="nav-link border-0 bg-transparent"><i
+                                class="bi bi-box-arrow-right"></i> Keluar</button>
                     </form>
                 </li>
             </ul>

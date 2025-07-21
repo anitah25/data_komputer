@@ -19,7 +19,7 @@ class Komputer extends Model
      */
     protected $fillable = [
         'user_id',
-        'nomor_aset',
+        'kode_barang',
         'nama_komputer',
         'merek_komputer',
         'tahun_pengadaan',
@@ -32,7 +32,8 @@ class Komputer extends Model
         'kesesuaian_pc',
         'kondisi_komputer',
         'keterangan_kondisi',
-        'lokasi_penempatan',
+        'penggunaan_sekarang',
+        'ruangan_id',
         'barcode',
     ];
 
@@ -58,5 +59,13 @@ class Komputer extends Model
     public function maintenanceHistories(): HasMany
     {
         return $this->hasMany(RiwayatPerbaikanKomputer::class, 'asset_id');
+    }
+
+    /**
+     * Get the ruangan for this computer asset.
+     */
+    public function ruangan(): BelongsTo
+    {
+        return $this->belongsTo(Ruangan::class);
     }
 }

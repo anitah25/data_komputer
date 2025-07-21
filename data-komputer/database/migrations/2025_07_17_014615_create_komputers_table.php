@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('komputers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->string('nomor_aset');
+            $table->string('kode_barang');
             $table->string('nama_komputer');
             $table->string('merek_komputer');
             $table->integer('tahun_pengadaan');
@@ -27,7 +27,8 @@ return new class extends Migration
             $table->string('kesesuaian_pc');
             $table->string('kondisi_komputer');
             $table->string('keterangan_kondisi');
-            $table->string('lokasi_penempatan');
+            $table->string('penggunaan_sekarang');
+            $table->foreignId('ruangan_id');
             $table->string('barcode');
             $table->timestamps();
         });

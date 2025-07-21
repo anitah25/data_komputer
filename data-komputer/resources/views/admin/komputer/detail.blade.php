@@ -201,12 +201,12 @@
                         {{ $komputer->nama_komputer }}
                     </h2>
                 </div>
-                <p class="text-muted">{{ $komputer->nomor_aset }}</p>
+                <p class="text-muted">{{ $komputer->kode_barang }}</p>
             </div>
             <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0">
                 <div class="btn-toolbar" role="toolbar">
                     <div class="btn-group me-2" role="group">
-                        <a href="{{ route('komputer.edit', $komputer->nomor_aset) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('komputer.edit', $komputer->kode_barang) }}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil-square"></i> Edit Data
                         </a>
                         <a href="#" class="btn btn-outline-success" data-bs-toggle="modal"
@@ -301,7 +301,7 @@
                                     </div>
                                     <div>
                                         <small class="text-muted d-block">Ruangan</small>
-                                        <strong>{{ $komputer->lokasi_penempatan }}</strong>
+                                        <strong>{{ $komputer->ruangan->nama_ruangan }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -313,6 +313,17 @@
                                     <div>
                                         <small class="text-muted d-block">Pengguna</small>
                                         <strong>{{ $komputer->nama_pengguna_sekarang }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="spec-item">
+                                    <div class="spec-icon">
+                                        <i class="bi bi-pc-display-horizontal"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Penggunaan Sekarang</small>
+                                        <strong>{{ $komputer->penggunaan_sekarang }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -537,7 +548,7 @@
                     <div class="card-body text-center">
                         <div class="qr-container mb-3">
                             <img src="{{ asset('storage/' . $komputer->barcode) }}"
-                                alt="Barcode {{ $komputer->nomor_aset }}" class="img-fluid">
+                                alt="Barcode {{ $komputer->kode_barang }}" class="img-fluid">
                         </div>
                         <div class="d-flex justify-content-center">
                             <button class="btn btn-outline-primary" id="printBarcode">
@@ -560,8 +571,8 @@
                 </div>
                 <div class="modal-body text-center">
                     <div class="d-inline-block p-3 bg-white">
-                        <img src="{{ asset('storage/qrcodes/' . $komputer->nomor_aset . '.png') }}"
-                            alt="QR Code {{ $komputer->nomor_aset }}" class="img-fluid">
+                        <img src="{{ asset('storage/qrcodes/' . $komputer->kode_barang . '.png') }}"
+                            alt="QR Code {{ $komputer->kode_barang }}" class="img-fluid">
                     </div>
                     <p class="mt-3">Scan QR code ini untuk melihat detail perangkat</p>
                 </div>
@@ -671,8 +682,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus data perangkat dengan nomor aset
-                        <strong>{{ $komputer->nomor_aset }}</strong>?
+                    <p>Apakah Anda yakin ingin menghapus data perangkat dengan kode barang
+                        <strong>{{ $komputer->kode_barang }}</strong>?
                     </p>
                     <p class="text-danger"><small>Tindakan ini tidak dapat dibatalkan.</small></p>
                 </div>

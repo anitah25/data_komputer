@@ -52,7 +52,9 @@ class KomputerController extends Controller
     public function create()
     {
         // Menampilkan form untuk menambahkan komputer baru
-        return view('admin.komputer.tambah');
+        return view('admin.komputer.tambah', [
+            'ruangans' => $this->komputerGetData->getUniqueRuangan(),
+        ]);
     }
 
     /**
@@ -66,7 +68,7 @@ class KomputerController extends Controller
             $validated = $this->komputerStore->validateInput($request);
 
             // generate barcode
-            $barcode = $this->komputerStore->generateQRCode($validated['nomor_aset']);
+            $barcode = $this->komputerStore->generateQRCode($validated['kode_barang']);
             $validated['barcode'] = $barcode;
 
             // simpan data komputer
@@ -94,20 +96,20 @@ class KomputerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $nomor_aset)
+    public function show(string $kode_barang)
     {
         return view('admin.komputer.detail', [
-            'komputer' => $this->komputerGetData->getByNomorAset($nomor_aset),
+            'komputer' => $this->komputerGetData->getByKodeBarang($kode_barang),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $nomor_aset)
+    public function edit(string $kode_barang)
     {
         return view('admin.komputer.edit', [
-            'komputer' => $this->komputerGetData->getByNomorAset($nomor_aset),
+            'komputer' => $this->komputerGetData->getByKodeBarang($kode_barang),
         ]);
     }
 
