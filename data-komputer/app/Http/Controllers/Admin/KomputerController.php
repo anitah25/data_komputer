@@ -14,6 +14,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\KomputerExport;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use PDF;
 
 class KomputerController extends Controller
 {
@@ -186,5 +190,182 @@ class KomputerController extends Controller
                 ->back()
                 ->with('error', 'Gagal menghapus data komputer: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export data to specified format
+     */
+    public function export(Request $request)
+    {
+        // Get query parameters
+        $format = $request->input('format', 'excel');
+        $columns = $request->input('columns', ['kode_barang', 'nama_komputer', 'ruangan', 'nama_pengguna', 'spesifikasi', 'kondisi', 'penggunaan']);
+        
+        // Build the query with filters
+        $query = Komputer::query()->with('ruangan');
+        
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $query->where(function($q) use ($keyword) {
+                $q->where('kode_barang', 'like', "%{$keyword}%")
+                  ->orWhere('nama_komputer', 'like', "%{$keyword}%")
+                  ->orWhere('nama_pengguna_sekarang', 'like', "%{$keyword}%");
+            });
+        }
+        
+        if ($request->filled('ruangan')) {
+            $query->where('ruangan_id', $request->input('ruangan'));
+        }
+        
+        if ($request->filled('kondisi')) {
+            $query->where('kondisi_komputer', $request->input('kondisi'));
+        }
+        
+        // Get data
+        $komputers = $query->get();
+        
+        // Format timestamp for filename
+        $timestamp = now()->format('Ymd_His');
+        $filename = "data_komputer_{$timestamp}";
+        
+        // Create export based on requested format
+        switch ($format) {
+            case 'csv':
+                return $this->exportToCSV($komputers, $columns, $filename);
+            case 'pdf':
+                return $this->exportToPDF($komputers, $columns, $filename);
+            case 'excel':
+            default:
+                return $this->exportToExcel($komputers, $columns, $filename);
+        }
+    }
+
+    /**
+     * Helper method to export to Excel
+     */
+    private function exportToExcel($komputers, $columns, $filename)
+    {
+        // This requires the Laravel Excel package
+        // composer require maatwebsite/excel
+        
+        return Excel::download(new KomputerExport($komputers, $columns), "{$filename}.xlsx");
+    }
+
+    /**
+     * Helper method to export to CSV
+     */
+    private function exportToCSV($komputers, $columns, $filename)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}.csv\"",
+        ];
+        
+        $callback = function() use ($komputers, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Add header row
+            $headerRow = $this->getHeaderRow($columns);
+            fputcsv($file, $headerRow);
+            
+            // Add data rows
+            foreach ($komputers as $komputer) {
+                $row = $this->formatDataRow($komputer, $columns);
+                fputcsv($file, $row);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Helper method to export to PDF
+     */
+    private function exportToPDF($komputers, $columns, $filename)
+    {
+        // This requires a PDF package like dompdf
+        // composer require barryvdh/laravel-dompdf
+        
+        $headerRow = $this->getHeaderRow($columns);
+        $data = [];
+        
+        foreach ($komputers as $komputer) {
+            $data[] = $this->formatDataRow($komputer, $columns);
+        }
+        
+        $pdf = FacadePdf::loadView('admin.komputer.export_pdf', [
+            'headerRow' => $headerRow,
+            'data' => $data,
+            'title' => 'Data Komputer ESDM'
+        ]);
+        
+        return $pdf->download("{$filename}.pdf");
+    }
+
+    /**
+     * Helper to get header row based on selected columns
+     */
+    private function getHeaderRow($columns)
+    {
+        $headerMap = [
+            'kode_barang' => 'Kode Barang',
+            'nama_komputer' => 'Nama Komputer',
+            'ruangan' => 'Ruangan',
+            'nama_pengguna' => 'Pengguna',
+            'spesifikasi' => 'Spesifikasi',
+            'kondisi' => 'Kondisi',
+            'penggunaan' => 'Penggunaan',
+            'tanggal_pengadaan' => 'Tanggal Pengadaan'
+        ];
+        
+        $headers = [];
+        foreach ($columns as $column) {
+            if (isset($headerMap[$column])) {
+                $headers[] = $headerMap[$column];
+            }
+        }
+        
+        return $headers;
+    }
+
+    /**
+     * Helper to format data row based on selected columns
+     */
+    private function formatDataRow($komputer, $columns)
+    {
+        $row = [];
+        
+        foreach ($columns as $column) {
+            switch ($column) {
+                case 'kode_barang':
+                    $row[] = $komputer->kode_barang;
+                    break;
+                case 'nama_komputer':
+                    $row[] = $komputer->nama_komputer;
+                    break;
+                case 'ruangan':
+                    $row[] = $komputer->ruangan ? $komputer->ruangan->nama_ruangan : 'Tidak tersedia';
+                    break;
+                case 'nama_pengguna':
+                    $row[] = $komputer->nama_pengguna_sekarang;
+                    break;
+                case 'spesifikasi':
+                    $row[] = "Processor: {$komputer->spesifikasi_processor}, RAM: {$komputer->spesifikasi_ram}, Storage: {$komputer->spesifikasi_penyimpanan}";
+                    break;
+                case 'kondisi':
+                    $row[] = $komputer->kondisi_komputer;
+                    break;
+                case 'penggunaan':
+                    $row[] = $komputer->penggunaan_sekarang;
+                    break;
+                case 'tanggal_pengadaan':
+                    $row[] = $komputer->tahun_pengadaan;
+                    break;
+            }
+        }
+        
+        return $row;
     }
 }

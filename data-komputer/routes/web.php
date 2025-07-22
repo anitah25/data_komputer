@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Middleware\IsSuperAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -16,9 +17,7 @@ Route::middleware('guest')->group(function () {
 
 // Admin
 Route::prefix("admin")->middleware(['auth'])->group(function () {
-    Route::get("/", function () {
-        return view("admin.dashboard");
-    })->name("admin.dashboard");
+    Route::get("/", [DashboardController::class, 'index'])->name("admin.dashboard");
 
     Route::post('/logout', [\App\Http\Controllers\Auth\AuthController::class, "logout"])->name('logout');
 
@@ -26,9 +25,8 @@ Route::prefix("admin")->middleware(['auth'])->group(function () {
     Route::middleware(IsSuperAdmin::class)->group(function () {
         Route::resource("komputer", App\Http\Controllers\Admin\KomputerController::class);
     });
-    
+
+    Route::get('/admin/komputer/export', [App\Http\Controllers\Admin\KomputerController::class, 'export'])->name('komputer.export');
     Route::resource("komputer", App\Http\Controllers\Admin\KomputerController::class)->only(['index', 'show']);
     Route::resource("komputer.riwayat", App\Http\Controllers\Admin\RiwayatPerbaikanKomputerController::class)->only(['index', 'show']);
-
-
 });
