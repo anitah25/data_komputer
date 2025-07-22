@@ -102,13 +102,38 @@ class RiwayatPerbaikanKomputerController extends Controller
     }
 
     /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $kode_barang, $id_riwayat)
+    {
+        DB::beginTransaction();
+        try {
+            
+            $validated = $this->riwayatPerbaikan->validationUpdate($request);
+            
+            $this->riwayatPerbaikan->update($validated, $id_riwayat);
+
+            DB::commit();
+            return redirect()
+                ->route('komputer.riwayat.index', $request->get('kode_barang'))
+                ->with('success', 'Riwayat perbaikan berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->back()
+                ->with('error', 'Gagal memperbarui riwayat perbaikan: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
-    public function destroy($kode_barang, $id)
+    public function destroy($kode_barang, $riwayat_id)
     {
         try {
             // Find and delete the maintenance record
-            $riwayat = RiwayatPerbaikanKomputer::findOrFail($id);
+            $riwayat = RiwayatPerbaikanKomputer::findOrFail($riwayat_id);
             $riwayat->delete();
             
             return redirect()

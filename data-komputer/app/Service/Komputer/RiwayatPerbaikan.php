@@ -49,4 +49,11 @@ class RiwayatPerbaikan
         $riwayat = RiwayatPerbaikanKomputer::create($data);
         return $riwayat;
     }
+
+    public function update($data, $id_riwayat)
+    {
+        $riwayat = RiwayatPerbaikanKomputer::findOrFail($id_riwayat);
+        $riwayat->update($data);
+        return $riwayat;
+    }
 }

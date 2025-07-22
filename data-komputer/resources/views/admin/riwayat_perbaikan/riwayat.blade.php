@@ -139,7 +139,7 @@
                                                     </li>
                                                     <li>
                                                         <form
-                                                            action="{{ route('komputer.riwayat.destroy', ['komputer' => $komputer->kode_barang, 'riwayat' => $item->id]) }}"
+                                                            action="{{ route('komputer.riwayat.destroy', [$komputer->kode_barang, $item->id]) }}"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat perbaikan ini?')">
                                                             @csrf
@@ -240,6 +240,83 @@
                                                         <button type="button" class="btn btn-secondary"
                                                             data-bs-dismiss="modal">Tutup</button>
                                                     </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Edit Modal -->
+                                        <div class="modal fade" id="editModal-{{ $item->id }}" tabindex="-1"
+                                            aria-labelledby="editModalLabel-{{ $item->id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-lg">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="editModalLabel-{{ $item->id }}">
+                                                            Edit Riwayat Perbaikan
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <form action="{{ route('komputer.riwayat.update', [$komputer->kode_barang, $item->id] ) }}" method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="kode_barang" value="{{ $komputer->kode_barang }}">
+                                                        <div class="modal-body">
+                                                            <div class="row mb-3">
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_jenis_maintenance_{{ $item->id }}" class="form-label">Jenis Maintenance <span class="text-danger">*</span></label>
+                                                                        <select class="form-select" id="edit_jenis_maintenance_{{ $item->id }}" name="jenis_maintenance" required>
+                                                                            <option value="">Pilih jenis maintenance</option>
+                                                                            <option value="Perbaikan Hardware" {{ $item->jenis_maintenance == 'Perbaikan Hardware' ? 'selected' : '' }}>Perbaikan Hardware</option>
+                                                                            <option value="Perbaikan Software" {{ $item->jenis_maintenance == 'Perbaikan Software' ? 'selected' : '' }}>Perbaikan Software</option>
+                                                                            <option value="Pemeliharaan Rutin" {{ $item->jenis_maintenance == 'Pemeliharaan Rutin' ? 'selected' : '' }}>Pemeliharaan Rutin</option>
+                                                                            <option value="Upgrade" {{ $item->jenis_maintenance == 'Upgrade' ? 'selected' : '' }}>Upgrade</option>
+                                                                            <option value="Lainnya" {{ $item->jenis_maintenance == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_teknisi_{{ $item->id }}" class="form-label">Teknisi <span class="text-danger">*</span></label>
+                                                                        <input type="text" class="form-control" id="edit_teknisi_{{ $item->id }}" name="teknisi" value="{{ $item->teknisi }}" required>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_komponen_diganti_{{ $item->id }}" class="form-label">Komponen yang Diganti</label>
+                                                                        <input type="text" class="form-control" id="edit_komponen_diganti_{{ $item->id }}" name="komponen_diganti" value="{{ $item->komponen_diganti }}">
+                                                                        <div class="form-text">Kosongkan jika tidak ada komponen yang diganti</div>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_biaya_maintenance_{{ $item->id }}" class="form-label">Biaya Maintenance (Rp)</label>
+                                                                        <input type="number" class="form-control" id="edit_biaya_maintenance_{{ $item->id }}" name="biaya_maintenance" value="{{ $item->biaya_maintenance }}">
+                                                                        <div class="form-text">Kosongkan jika tidak ada biaya</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_hasil_maintenance_{{ $item->id }}" class="form-label">Hasil Maintenance <span class="text-danger">*</span></label>
+                                                                        <select class="form-select" id="edit_hasil_maintenance_{{ $item->id }}" name="hasil_maintenance" required>
+                                                                            <option value="">Pilih hasil maintenance</option>
+                                                                            <option value="Berhasil" {{ $item->hasil_maintenance == 'Berhasil' ? 'selected' : '' }}>Berhasil</option>
+                                                                            <option value="Sebagian" {{ $item->hasil_maintenance == 'Sebagian' ? 'selected' : '' }}>Sebagian</option>
+                                                                            <option value="Gagal" {{ $item->hasil_maintenance == 'Gagal' ? 'selected' : '' }}>Gagal</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_keterangan_{{ $item->id }}" class="form-label">Keterangan <span class="text-danger">*</span></label>
+                                                                        <textarea class="form-control" id="edit_keterangan_{{ $item->id }}" name="keterangan" rows="3" required>{{ $item->keterangan }}</textarea>
+                                                                        <div class="form-text">Jelaskan permasalahan dan tindakan yang dilakukan</div>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label for="edit_rekomendasi_{{ $item->id }}" class="form-label">Rekomendasi</label>
+                                                                        <textarea class="form-control" id="edit_rekomendasi_{{ $item->id }}" name="rekomendasi" rows="3">{{ $item->rekomendasi }}</textarea>
+                                                                        <div class="form-text">Rekomendasi untuk pemeliharaan ke depan</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                                        </div>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>

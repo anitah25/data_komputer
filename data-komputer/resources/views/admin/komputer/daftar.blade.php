@@ -106,6 +106,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>No</th>
+                                <th>Aksi</th>
                                 <th>Kode Barang</th>
                                 <th>Nama Komputer</th>
                                 <th>Lokasi</th>
@@ -113,42 +114,12 @@
                                 <th>Penggunaan</th>
                                 <th>Spesifikasi</th>
                                 <th>Kondisi</th>
-                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($komputers as $index => $komputer)
                                 <tr>
                                     <td>{{ ($komputers->currentPage() - 1) * $komputers->perPage() + $index + 1 }}</td>
-                                    <td>{{ $komputer->kode_barang }}</td>
-                                    <td>{{ $komputer->nama_komputer }}</td>
-                                    <td>{{ $komputer->ruangan->nama_ruangan }}</td>
-                                    <td>{{ $komputer->nama_pengguna_sekarang }}</td>
-                                    <td>{{ $komputer->penggunaan_sekarang }}</td>
-                                    <td>
-                                        <small>
-                                            <i class="bi bi-cpu"></i> {{ $komputer->spesifikasi_processor }}<br>
-                                            <i class="bi bi-memory"></i> {{ $komputer->spesifikasi_ram }}<br>
-                                            <i class="bi bi-hdd"></i> {{ $komputer->spesifikasi_penyimpanan }}
-                                        </small>
-                                    </td>
-                                    <td>
-                                        @if($komputer->kondisi_komputer == 'Sangat Baik')
-                                            <span class="badge bg-success">{{ $komputer->kondisi_komputer }}</span>
-                                        @elseif($komputer->kondisi_komputer == 'Baik')
-                                            <span
-                                                class="badge bg-success-subtle text-success-emphasis">{{ $komputer->kondisi_komputer }}</span>
-                                        @elseif($komputer->kondisi_komputer == 'Cukup')
-                                            <span class="badge bg-info">{{ $komputer->kondisi_komputer }}</span>
-                                        @elseif($komputer->kondisi_komputer == 'Kurang')
-                                            <span class="badge bg-warning text-dark">{{ $komputer->kondisi_komputer }}</span>
-                                        @elseif($komputer->kondisi_komputer == 'Rusak')
-                                            <span class="badge bg-danger">{{ $komputer->kondisi_komputer }}</span>
-                                        @else
-                                            <span
-                                                class="badge bg-secondary">{{ $komputer->kondisi_komputer ?? 'Tidak Diketahui' }}</span>
-                                        @endif
-                                    </td>
                                     <td>
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
@@ -230,6 +201,36 @@
                                             </div>
                                         </div>
                                     </td>
+                                    <td>{{ $komputer->kode_barang }}</td>
+                                    <td>{{ $komputer->nama_komputer }}</td>
+                                    <td>{{ $komputer->ruangan->nama_ruangan }}</td>
+                                    <td>{{ $komputer->nama_pengguna_sekarang }}</td>
+                                    <td>{{ $komputer->penggunaan_sekarang }}</td>
+                                    <td>
+                                        <small>
+                                            <i class="bi bi-cpu"></i> {{ $komputer->spesifikasi_processor }}<br>
+                                            <i class="bi bi-memory"></i> {{ $komputer->spesifikasi_ram }}<br>
+                                            <i class="bi bi-hdd"></i> {{ $komputer->spesifikasi_penyimpanan }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        @if($komputer->kondisi_komputer == 'Sangat Baik')
+                                            <span class="badge bg-success">{{ $komputer->kondisi_komputer }}</span>
+                                        @elseif($komputer->kondisi_komputer == 'Baik')
+                                            <span
+                                                class="badge bg-success-subtle text-success-emphasis">{{ $komputer->kondisi_komputer }}</span>
+                                        @elseif($komputer->kondisi_komputer == 'Cukup')
+                                            <span class="badge bg-info">{{ $komputer->kondisi_komputer }}</span>
+                                        @elseif($komputer->kondisi_komputer == 'Kurang')
+                                            <span class="badge bg-warning text-dark">{{ $komputer->kondisi_komputer }}</span>
+                                        @elseif($komputer->kondisi_komputer == 'Rusak')
+                                            <span class="badge bg-danger">{{ $komputer->kondisi_komputer }}</span>
+                                        @else
+                                            <span
+                                                class="badge bg-secondary">{{ $komputer->kondisi_komputer ?? 'Tidak Diketahui' }}</span>
+                                        @endif
+                                    </td>
+                                    
                                 </tr>
                             @empty
                                 <tr>
