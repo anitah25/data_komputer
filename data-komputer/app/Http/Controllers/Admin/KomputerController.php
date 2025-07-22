@@ -14,10 +14,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\KomputerExport;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
-use PDF;
+use Barryvdh\DomPDF\PDF;
+use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel as FacadesExcel;
 
 class KomputerController extends Controller
 {
@@ -114,6 +115,7 @@ class KomputerController extends Controller
     {
         return view('admin.komputer.edit', [
             'komputer' => $this->komputerGetData->getByKodeBarang($kode_barang),
+            'ruangans' => $this->komputerGetData->getUniqueRuangan()
         ]);
     }
 
@@ -248,7 +250,7 @@ class KomputerController extends Controller
         // This requires the Laravel Excel package
         // composer require maatwebsite/excel
         
-        return Excel::download(new KomputerExport($komputers, $columns), "{$filename}.xlsx");
+        return FacadesExcel::download(new KomputerExport($komputers, $columns), "{$filename}.xlsx");
     }
 
     /**

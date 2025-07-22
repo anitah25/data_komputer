@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('jenis_maintenance');
             $table->string('keterangan');
             $table->string('teknisi');
-            $table->string('komponen_diganti');
-            $table->string('biaya_maintenance');
-            $table->string('hasil_maintenance');
-            $table->string('rekomendasi');
+            $table->string('komponen_diganti')->nullable();
+            $table->string('biaya_maintenance')->nullable();
+            $table->string('hasil_maintenance')->nullable();
+            $table->string('rekomendasi')->nullable();
             $table->timestamps();
         });
     }

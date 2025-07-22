@@ -95,12 +95,6 @@
                                             <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Export PDF
                                         </a>
                                     </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#exportOptionsModal">
-                                            <i class="bi bi-gear me-2"></i> Opsi Export
-                                        </a>
-                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -171,7 +165,7 @@
                                                                 class="bi bi-pencil"></i> Edit</a></li>
                                                 @endcan
                                                 <li><a class="dropdown-item"
-                                                        href="{{ route('komputer.edit', $komputer->kode_barang) }}"><i
+                                                        href="{{ route('komputer.riwayat.index', $komputer->kode_barang) }}"><i
                                                             class="bi bi-tools"></i> Riwayat Perbaikan</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#barcodeModal-{{ $komputer->kode_barang }}"><i

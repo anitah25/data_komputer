@@ -209,13 +209,12 @@
                         <a href="{{ route('komputer.edit', $komputer->kode_barang) }}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil-square"></i> Edit Data
                         </a>
-                        <a href="#" class="btn btn-outline-success" data-bs-toggle="modal"
-                            data-bs-target="#tambahPemeliharaanModal">
-                            <i class="bi bi-tools"></i> Tambah Perbaikan
+                        <a href="{{ route('komputer.riwayat.index', $komputer->kode_barang) }}" class="btn btn-outline-success" >
+                            <i class="bi bi-tools"></i> Riwayat Perbaikan
                         </a>
                     </div>
                     <div class="btn-group" role="group">
-                        <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST" 
+                        <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST"
                             onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                             @csrf
                             @method('DELETE')
@@ -488,10 +487,9 @@
                 <div class="card detail-card mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><i class="bi bi-clock-history text-primary"></i> Histori Pemeliharaan</h4>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#tambahPemeliharaanModal">
-                            <i class="bi bi-plus-circle"></i> Tambah
-                        </button>
+                        <a href="{{ route('komputer.riwayat.index', $komputer->id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle"></i> Lihat Selengkapnya
+                        </a>
                     </div>
                     <div class="card-body">
                         @if($komputer->maintenanceHistories->isEmpty())

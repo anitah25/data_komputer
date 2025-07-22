@@ -107,8 +107,8 @@ class RiwayatPerbaikanKomputerSeeder extends Seeder
                 // Pilih rekomendasi acak
                 $recommendation = $recommendations[array_rand($recommendations)];
 
-                // Acak biaya maintenance antara 0 dan 3 juta
-                $cost = 'Rp ' . number_format(rand(0, 3000000), 0, ',', '.');
+                // Acak biaya maintenance antara 0 dan 3 juta (simpan sebagai integer)
+                $cost = rand(0, 3000000);
 
                 RiwayatPerbaikanKomputer::create([
                     'asset_id' => $komputer->id,

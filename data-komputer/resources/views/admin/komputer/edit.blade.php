@@ -431,7 +431,7 @@
                             <button type="submit" class="btn btn-primary btn-lg px-5">
                                 <i class="bi bi-save"></i> Perbarui Data Perangkat
                             </button>
-                            <a href="{{ route('komputer.show', $komputer->nomor_aset) }}" class="btn btn-outline-secondary btn-lg ms-2">
+                            <a href="{{ route('komputer.show', $komputer->kode_barang) }}" class="btn btn-outline-secondary btn-lg ms-2">
                                 <i class="bi bi-x-circle"></i> Batal
                             </a>
                         </div>
