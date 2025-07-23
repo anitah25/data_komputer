@@ -128,9 +128,9 @@ class KomputerController extends Controller
         try {
             $validated = $this->komputerUpdate->validateInput($request, $id);
 
-            if ($request->get('old_nomor_aset') != $validated['nomor_aset']) {
-                // Generate new QR code if nomor_aset has changed
-                $barcode = $this->komputerStore->generateQRCode($validated['nomor_aset']);
+            if ($request->get('old_kode_barang') != $validated['kode_barang']) {
+                // Generate new QR code if kode_barang has changed
+                $barcode = $this->komputerStore->generateQRCode($validated['kode_barang']);
                 $validated['barcode'] = $barcode;
             }
 

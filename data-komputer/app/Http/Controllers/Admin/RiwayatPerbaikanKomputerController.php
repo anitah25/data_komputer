@@ -115,7 +115,7 @@ class RiwayatPerbaikanKomputerController extends Controller
             $riwayat->delete();
             
             return redirect()
-                ->route('riwayat-perbaikan.index', $kode_barang)
+                ->route('komputer.riwayat.index', $kode_barang)
                 ->with('success', 'Riwayat perbaikan berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()
@@ -129,9 +129,359 @@ class RiwayatPerbaikanKomputerController extends Controller
      */
     public function export(Request $request, $kode_barang)
     {
-        // Implement export functionality similar to KomputerController::export
-        // ...
+        // Get computer data first with gallery images
+        $komputer = Komputer::where('kode_barang', $kode_barang)->with('galleries')->firstOrFail();
+        
+        // Set explicit default columns for maintenance history
+        $defaultColumns = [
+            'nomor_urut',
+            'jenis_maintenance',
+            'tanggal',
+            'teknisi',
+            'keterangan',
+            'komponen_diganti',
+            'biaya_maintenance',
+            'hasil_maintenance',
+            'rekomendasi'
+        ];
+        
+        // Use default columns if none are provided in the request
+        $format = $request->input('format', 'excel');
+        $columns = $request->has('columns') ? $request->input('columns') : $defaultColumns;
+        
+        // Get all maintenance records for this computer
+        $query = RiwayatPerbaikanKomputer::where('asset_id', $komputer->id);
+        
+        // Apply filters if any
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $query->where(function($q) use ($keyword) {
+                $q->where('jenis_maintenance', 'like', "%{$keyword}%")
+                  ->orWhere('teknisi', 'like', "%{$keyword}%")
+                  ->orWhere('keterangan', 'like', "%{$keyword}%");
+            });
+        }
+        
+        if ($request->filled('jenis')) {
+            $query->where('jenis_maintenance', $request->input('jenis'));
+        }
+        
+        // Get sorted data
+        $riwayatPerbaikan = $query->orderBy('created_at', 'desc')->get();
+        
+        // Format timestamp for filename
+        $timestamp = now()->format('Ymd_His');
+        $filename = "riwayat_pemeliharaan_{$kode_barang}_{$timestamp}";
+        
+        // Create export based on requested format
+        switch ($format) {
+            case 'csv':
+                return $this->exportToCSV($komputer, $riwayatPerbaikan, $columns, $filename);
+            case 'pdf':
+                return $this->exportToPDF($komputer, $riwayatPerbaikan, $columns, $filename);
+            case 'excel':
+            default:
+                return $this->exportToExcel($komputer, $riwayatPerbaikan, $columns, $filename);
+        }
+    }
 
-        return redirect()->back()->with('info', 'Fitur export akan segera tersedia.');
+    /**
+     * Helper method to export maintenance history to Excel
+     */
+    private function exportToExcel($komputer, $riwayatPerbaikan, $columns, $filename)
+    {
+        // This requires the Laravel Excel package
+        // We'll create a new export class for this
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RiwayatPerbaikanExport($komputer, $riwayatPerbaikan, $columns), "{$filename}.xlsx");
+    }
+    
+    /**
+     * Helper method to export maintenance history to CSV
+     */
+    private function exportToCSV($komputer, $riwayatPerbaikan, $columns, $filename)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}.csv\"",
+        ];
+        
+        $callback = function() use ($komputer, $riwayatPerbaikan, $columns) {
+            $file = fopen('php://output', 'w');
+            
+            // Add komputer details header row
+            fputcsv($file, ['DETAIL KOMPUTER']);
+            fputcsv($file, ['Kode Barang', $komputer->kode_barang]);
+            fputcsv($file, ['Nama Komputer', $komputer->nama_komputer]);
+            fputcsv($file, ['Ruangan', $komputer->ruangan ? $komputer->ruangan->nama_ruangan : 'Tidak tersedia']);
+            fputcsv($file, ['Pengguna', $komputer->nama_pengguna_sekarang]);
+            fputcsv($file, ['Spesifikasi', "Processor: {$komputer->spesifikasi_processor}, RAM: {$komputer->spesifikasi_ram}, Storage: {$komputer->spesifikasi_penyimpanan}"]);
+            fputcsv($file, ['Kondisi', $komputer->kondisi_komputer]);
+            fputcsv($file, ['Barcode', $komputer->barcode ? basename($komputer->barcode) : 'Tidak ada barcode']);
+            
+            // Add gallery images info if any
+            if ($komputer->galleries && $komputer->galleries->count() > 0) {
+                fputcsv($file, []);
+                fputcsv($file, ['FOTO KOMPUTER']);
+                foreach ($komputer->galleries as $index => $gallery) {
+                    fputcsv($file, ['Foto ' . ($index + 1), basename($gallery->image_path)]);
+                }
+            }
+            
+            // Empty row as separator
+            fputcsv($file, []);
+            
+            // Add riwayat perbaikan header row
+            fputcsv($file, ['RIWAYAT PEMELIHARAAN']);
+            
+            // Add columns header row
+            $headerRow = $this->getHeaderRow($columns);
+            fputcsv($file, $headerRow);
+            
+            // Add data rows
+            foreach ($riwayatPerbaikan as $index => $riwayat) {
+                $row = $this->formatDataRow($riwayat, $columns, $index);
+                fputcsv($file, $row);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Helper method to export maintenance history to PDF
+     */
+    private function exportToPDF($komputer, $riwayatPerbaikan, $columns, $filename)
+    {
+        $headerRow = $this->getHeaderRow($columns);
+        $data = [];
+        
+        // Pre-process barcode image for PDF generation
+        $barcodePath = null;
+        $barcodeImage = null;
+        
+        if ($komputer->barcode) {
+            // Use the helper to find the barcode file
+            $barcodePath = $this->findBarcodeFile($komputer->barcode);
+            
+            if ($barcodePath && file_exists($barcodePath)) {
+                // If found, store base64 encoded image data
+                $type = pathinfo($barcodePath, PATHINFO_EXTENSION);
+                $imageData = file_get_contents($barcodePath);
+                if ($imageData !== false) {
+                    $barcodeImage = 'data:image/' . $type . ';base64,' . base64_encode($imageData);
+                }
+            }
+        }
+        
+        // Pre-process gallery images for PDF
+        $galleryImages = [];
+        
+        if ($komputer->galleries && $komputer->galleries->count() > 0) {
+            foreach ($komputer->galleries as $gallery) {
+                $imagePath = $this->findGalleryFile($gallery->image_path);
+                
+                if ($imagePath && file_exists($imagePath)) {
+                    $type = pathinfo($imagePath, PATHINFO_EXTENSION);
+                    $imageData = file_get_contents($imagePath);
+                    if ($imageData !== false) {
+                        $galleryImages[] = 'data:image/' . $type . ';base64,' . base64_encode($imageData);
+                    }
+                }
+            }
+        }
+        
+        // Format data rows for maintenance history
+        foreach ($riwayatPerbaikan as $index => $riwayat) {
+            $row = $this->formatDataRow($riwayat, $columns, $index);
+            $data[] = $row;
+        }
+        
+        // Create PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.riwayat_perbaikan.export_pdf', [
+            'headerRow' => $headerRow,
+            'data' => $data,
+            'title' => 'Riwayat Pemeliharaan Komputer',
+            'komputer' => $komputer,
+            'barcodeImage' => $barcodeImage,
+            'galleryImages' => $galleryImages
+        ]);
+        
+        // Configure dompdf options
+        $dompdf = $pdf->getDomPDF();
+        $options = $dompdf->getOptions();
+        $options->setIsRemoteEnabled(true);
+        $options->setIsHtml5ParserEnabled(true);
+        
+        // Set paper orientation
+        $pdf->setPaper('a4', 'landscape');
+        
+        return $pdf->download("{$filename}.pdf");
+    }
+    
+    /**
+     * Helper to get header row based on selected columns
+     */
+    private function getHeaderRow($columns)
+    {
+        $headerMap = [
+            'nomor_urut' => 'No',
+            'jenis_maintenance' => 'Jenis Pemeliharaan',
+            'tanggal' => 'Tanggal',
+            'teknisi' => 'Teknisi',
+            'keterangan' => 'Keterangan',
+            'komponen_diganti' => 'Komponen Diganti',
+            'biaya_maintenance' => 'Biaya',
+            'hasil_maintenance' => 'Hasil',
+            'rekomendasi' => 'Rekomendasi'
+        ];
+        
+        $headers = [];
+        foreach ($columns as $column) {
+            if (isset($headerMap[$column])) {
+                $headers[] = $headerMap[$column];
+            }
+        }
+        
+        return $headers;
+    }
+    
+    /**
+     * Helper to format data row based on selected columns
+     */
+    private function formatDataRow($riwayat, $columns, $index = null)
+    {
+        $row = [];
+        
+        foreach ($columns as $column) {
+            switch ($column) {
+                case 'nomor_urut':
+                    $row[] = isset($index) ? ($index + 1) : '—';
+                    break;
+                case 'jenis_maintenance':
+                    $row[] = $riwayat->jenis_maintenance;
+                    break;
+                case 'tanggal':
+                    $row[] = $riwayat->created_at->format('d M Y');
+                    break;
+                case 'teknisi':
+                    $row[] = $riwayat->teknisi;
+                    break;
+                case 'keterangan':
+                    $row[] = $riwayat->keterangan;
+                    break;
+                case 'komponen_diganti':
+                    $row[] = $riwayat->komponen_diganti ?: 'Tidak ada';
+                    break;
+                case 'biaya_maintenance':
+                    $row[] = $riwayat->biaya_maintenance ? 'Rp ' . number_format($riwayat->biaya_maintenance, 0, ',', '.') : 'Tidak ada biaya';
+                    break;
+                case 'hasil_maintenance':
+                    $row[] = $riwayat->hasil_maintenance;
+                    break;
+                case 'rekomendasi':
+                    $row[] = $riwayat->rekomendasi ?: 'Tidak ada';
+                    break;
+            }
+        }
+        
+        return $row;
+    }
+    
+    /**
+     * Helper untuk mencari file barcode di beberapa kemungkinan lokasi
+     */
+    private function findBarcodeFile($relativePath)
+    {
+        // Log untuk debugging
+        \Illuminate\Support\Facades\Log::info("Mencari barcode dengan path relatif: " . $relativePath);
+        
+        // Ambil nama file dari path
+        if (strpos($relativePath, '/') !== false) {
+            $filename = basename($relativePath);
+        } else {
+            $filename = $relativePath; // Path relatif sudah berupa nama file
+        }
+        
+        // Daftar kemungkinan path lengkap, dengan prioritas pada lokasi yang Anda sebutkan
+        $possiblePaths = [
+            // PRIORITAS 1: Path relatif lengkap
+            storage_path('app/public/' . $relativePath),
+            public_path('storage/' . $relativePath),
+            
+            // PRIORITAS 2: Lokasi di direktori barcode
+            storage_path('app/public/barcode/' . $filename),
+            public_path('storage/barcode/' . $filename),
+            
+            // PRIORITAS 3: Path alternatif lain
+            storage_path('app/public/barcode/' . $filename),
+            public_path('storage/public/barcode/' . $filename),
+            storage_path('app/' . $relativePath),
+            public_path($relativePath),
+            base_path('storage/app/public/' . $relativePath),
+            base_path('public/storage/' . $relativePath),
+        ];
+        
+        foreach ($possiblePaths as $path) {
+            \Illuminate\Support\Facades\Log::info("Mencoba path: " . $path);
+            if (file_exists($path)) {
+                \Illuminate\Support\Facades\Log::info("Barcode ditemukan di: " . $path);
+                return $path;
+            }
+        }
+        
+        \Illuminate\Support\Facades\Log::warning("Barcode tidak ditemukan di semua path yang dicek");
+        return null;
+    }
+    
+    /**
+     * Helper untuk mencari file gallery di beberapa kemungkinan lokasi
+     */
+    private function findGalleryFile($relativePath)
+    {
+        // Log untuk debugging
+        \Illuminate\Support\Facades\Log::info("Mencari gallery dengan path relatif: " . $relativePath);
+        
+        // Ambil nama file dari path
+        if (strpos($relativePath, '/') !== false) {
+            $filename = basename($relativePath);
+        } else {
+            $filename = $relativePath; // Path relatif sudah berupa nama file
+        }
+        
+        // Daftar kemungkinan path lengkap
+        $possiblePaths = [
+            // PRIORITAS 1: Path relatif lengkap
+            storage_path('app/public/' . $relativePath),
+            public_path('storage/' . $relativePath),
+            
+            // PRIORITAS 2: Lokasi di direktori komputers (sesuai dengan struktur aktual)
+            storage_path('app/public/komputers/' . $filename),
+            public_path('storage/komputers/' . $filename),
+            
+            // PRIORITAS 3: Path alternatif lain
+            storage_path('app/public/gallery/' . $filename),
+            public_path('storage/gallery/' . $filename),
+            storage_path('app/public/komputer/' . $filename),
+            public_path('storage/komputer/' . $filename),
+            storage_path('app/public/images/' . $filename),
+            public_path('storage/images/' . $filename),
+            storage_path('app/' . $relativePath),
+            public_path($relativePath),
+            base_path('storage/app/public/' . $relativePath),
+            base_path('public/storage/' . $relativePath),
+        ];
+        
+        foreach ($possiblePaths as $path) {
+            \Illuminate\Support\Facades\Log::info("Mencoba path gallery: " . $path);
+            if (file_exists($path)) {
+                \Illuminate\Support\Facades\Log::info("Gallery ditemukan di: " . $path);
+                return $path;
+            }
+        }
+        
+        \Illuminate\Support\Facades\Log::warning("Gallery tidak ditemukan di semua path yang dicek");
+        return null;
     }
 }

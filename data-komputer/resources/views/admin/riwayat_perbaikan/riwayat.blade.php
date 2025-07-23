@@ -88,6 +88,12 @@
                                                 <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Export PDF
                                             </a>
                                         </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->kode_barang, 'format' => 'csv'] + request()->query()) }}">
+                                                <i class="bi bi-file-earmark-text me-2 text-primary"></i> Export CSV
+                                            </a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
