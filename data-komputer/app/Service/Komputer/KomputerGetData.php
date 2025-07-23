@@ -18,7 +18,7 @@ class KomputerGetData
     public function getFilteredKomputers(array $filters, int $perPage)
     {
         $query = Komputer::query();
-        
+
         if (!empty($filters['keyword'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('nama_komputer', 'like', '%' . $filters['keyword'] . '%')
@@ -26,15 +26,15 @@ class KomputerGetData
                     ->orWhere('merek_komputer', 'like', '%' . $filters['keyword'] . '%');
             });
         }
-        
+
         if (!empty($filters['kondisi'])) {
             $query->where('kondisi_komputer', $filters['kondisi']);
         }
-        
+
         if (!empty($filters['ruangan'])) {
             $query->where('ruangan_id', $filters['ruangan']);
         }
-        
+
         return $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
     }
 

@@ -37,39 +37,17 @@ class RiwayatPerbaikanKomputerController extends Controller
      */
     public function index(Request $request, $kode_barang)
     {
-        // Get the computer
-        $komputer = Komputer::where('kode_barang', $kode_barang)->firstOrFail();
-
-        // Build query with filters
-        $query = RiwayatPerbaikanKomputer::where('asset_id', $komputer->id);
-        
-        // Apply search if keyword is provided
-        if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-            $query->where(function($q) use ($keyword) {
-                $q->where('jenis_maintenance', 'like', "%{$keyword}%")
-                  ->orWhere('teknisi', 'like', "%{$keyword}%")
-                  ->orWhere('keterangan', 'like', "%{$keyword}%");
-            });
-        }
-        
-        // Apply filter by maintenance type if provided
-        if ($request->filled('jenis')) {
-            $query->where('jenis_maintenance', $request->input('jenis'));
-        }
-        
-        // Get data with pagination
-        $riwayat = $query->orderBy('created_at', 'desc')->paginate(10);
+        $filter = $this->riwayatPerbaikan->getFilteredRiwayat($request->all(), 10, $kode_barang);
         
         // Get unique maintenance types for filter dropdown
-        $jenis_maintenance = RiwayatPerbaikanKomputer::where('asset_id', $komputer->id)
+        $jenis_maintenance = RiwayatPerbaikanKomputer::where('asset_id', $filter['komputer']->id)
             ->select('jenis_maintenance')
             ->distinct()
             ->pluck('jenis_maintenance');
         
         return view('admin.riwayat_perbaikan.riwayat', [
-            'riwayat' => $riwayat,
-            'komputer' => $komputer,
+            'riwayat' => $filter['riwayats'],
+            'komputer' => $filter['komputer'],
             'jenis_maintenance' => $jenis_maintenance,
             'ruangans' => $this->komputerGetData->getUniqueRuangan()
         ]);

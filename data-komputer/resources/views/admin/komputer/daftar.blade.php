@@ -95,6 +95,12 @@
                                             <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Export PDF
                                         </a>
                                     </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#exportOptionsModal">
+                                            <i class="bi bi-sliders me-2"></i> Custom Export Options
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -265,7 +271,7 @@
 
     <!-- Export Options Modal -->
     <div class="modal fade" id="exportOptionsModal" tabindex="-1" aria-labelledby="exportOptionsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exportOptionsModalLabel">Opsi Export Data</h5>
@@ -311,7 +317,8 @@
                         <div class="mb-3">
                             <label class="form-label">Kolom yang Diexport</label>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <h6 class="fw-bold text-muted small mb-2">Informasi Dasar</h6>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="columns[]" value="kode_barang" id="colKodeBarang" checked>
                                         <label class="form-check-label" for="colKodeBarang">
@@ -336,8 +343,15 @@
                                             Pengguna
                                         </label>
                                     </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="tanggal_pengadaan" id="colTanggalPengadaan" checked>
+                                        <label class="form-check-label" for="colTanggalPengadaan">
+                                            Tanggal Pengadaan
+                                        </label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <h6 class="fw-bold text-muted small mb-2">Spesifikasi & Kondisi</h6>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="columns[]" value="spesifikasi" id="colSpesifikasi" checked>
                                         <label class="form-check-label" for="colSpesifikasi">
@@ -354,12 +368,39 @@
                                         <input class="form-check-input" type="checkbox" name="columns[]" value="penggunaan" id="colPenggunaan" checked>
                                         <label class="form-check-label" for="colPenggunaan">
                                             Penggunaan
+                                        </label>checked>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6 class="fw-bold text-muted small mb-2">Maintenance Terakhir</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="latest_maintenance_date" id="colMaintenanceDate">checked>
+                                        <label class="form-check-label" for="colMaintenanceDate">
+                                            Tanggal Maintenance
                                         </label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="columns[]" value="tanggal_pengadaan" id="colTanggalPengadaan" checked>
-                                        <label class="form-check-label" for="colTanggalPengadaan">
-                                            Tanggal Pengadaan
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="latest_maintenance_type" id="colMaintenanceType">checked>
+                                        <label class="form-check-label" for="colMaintenanceType">
+                                            Jenis Maintenance
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="latest_maintenance_technician" id="colMaintenanceTechnician">checked>
+                                        <label class="form-check-label" for="colMaintenanceTechnician">
+                                            Teknisi
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="latest_maintenance_result" id="colMaintenanceResult">checked>
+                                        <label class="form-check-label" for="colMaintenanceResult">
+                                            Hasil Maintenance
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="latest_maintenance_cost" id="colMaintenanceCost">
+                                        <label class="form-check-label" for="colMaintenanceCost">
+                                            Biaya Maintenance
                                         </label>
                                     </div>
                                 </div>

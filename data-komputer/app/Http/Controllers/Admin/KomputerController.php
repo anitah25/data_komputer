@@ -176,8 +176,7 @@ class KomputerController extends Controller
             // Delete the computer record
             $komputer->delete();
 
-            // Clear cache for this computer
-            Cache::forget('komputer_' . $komputer->nomor_aset);
+            // Clear caches
             Cache::forget('ruangan_list');
 
             DB::commit();
@@ -199,13 +198,38 @@ class KomputerController extends Controller
      */
     public function export(Request $request)
     {
-        // Get query parameters
+        // Set explicit default columns including maintenance history
+        $defaultColumns = [
+            'nomor_urut',
+            'kode_barang', 
+            'nama_komputer', 
+            'ruangan', 
+            'nama_pengguna', 
+            'spesifikasi', 
+            'kondisi', 
+            'penggunaan',
+            'tanggal_pengadaan',
+            'latest_maintenance_date',
+            'latest_maintenance_type',
+            'latest_maintenance_technician',
+            'latest_maintenance_result',
+            'latest_maintenance_cost',
+            'barcode'
+        ];
+        
+        // Use default columns if none are provided in the request
         $format = $request->input('format', 'excel');
-        $columns = $request->input('columns', ['kode_barang', 'nama_komputer', 'ruangan', 'nama_pengguna', 'spesifikasi', 'kondisi', 'penggunaan']);
+        $columns = $request->has('columns') ? $request->input('columns') : $defaultColumns;
         
-        // Build the query with filters
-        $query = Komputer::query()->with('ruangan');
+        // Ensure proper eager loading of relationships with constraints
+        $query = Komputer::with([
+            'ruangan',
+            'maintenanceHistories' => function($query) {
+                $query->orderBy('created_at', 'desc')->limit(1);
+            }
+        ]);
         
+        // Apply filters
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
             $query->where(function($q) use ($keyword) {
@@ -271,8 +295,8 @@ class KomputerController extends Controller
             fputcsv($file, $headerRow);
             
             // Add data rows
-            foreach ($komputers as $komputer) {
-                $row = $this->formatDataRow($komputer, $columns);
+            foreach ($komputers as $index => $komputer) {
+                $row = $this->formatDataRow($komputer, $columns, 'csv', $index);
                 fputcsv($file, $row);
             }
             
@@ -293,17 +317,70 @@ class KomputerController extends Controller
         $headerRow = $this->getHeaderRow($columns);
         $data = [];
         
-        foreach ($komputers as $komputer) {
-            $data[] = $this->formatDataRow($komputer, $columns);
+        // Pre-process barcode images for PDF generation
+        $barcodeImages = [];
+        
+        foreach ($komputers as $index => $komputer) {
+            // Format the data row for this komputer
+            $row = $this->formatDataRow($komputer, $columns, 'pdf', $index);
+            $data[] = $row;
+            
+            // Handle barcode images separately
+            if ($komputer->barcode && in_array('barcode', $columns)) {
+                // Use the consistent findBarcodeFile helper for path resolution
+                $barcodePath = $this->findBarcodeFile($komputer->barcode);
+                
+                if ($barcodePath && file_exists($barcodePath)) {
+                    // If found, store base64 encoded image data
+                    $type = pathinfo($barcodePath, PATHINFO_EXTENSION);
+                    $imageData = file_get_contents($barcodePath);
+                    if ($imageData !== false) {
+                        $barcodeImages[$index] = 'data:image/' . $type . ';base64,' . base64_encode($imageData);
+                    } else {
+                        $barcodeImages[$index] = null; // Error reading file
+                        \Illuminate\Support\Facades\Log::error("Tidak dapat membaca file barcode: " . $barcodePath);
+                    }
+                } else {
+                    $barcodeImages[$index] = null; // No image found
+                    \Illuminate\Support\Facades\Log::warning("File barcode tidak ditemukan untuk komputer ID: " . $komputer->id . " dengan path " . $komputer->barcode);
+                }
+            }
         }
         
+        // Create PDF with correct options for Laravel-DomPDF v3.1
+        // First create the PDF instance
         $pdf = FacadePdf::loadView('admin.komputer.export_pdf', [
             'headerRow' => $headerRow,
             'data' => $data,
-            'title' => 'Data Komputer ESDM'
+            'title' => 'Data Komputer ESDM',
+            'komputers' => $komputers,
+            'barcodeImages' => $barcodeImages // Pass pre-processed barcode images
+        ]);
+        
+        // Then configure the dompdf options
+        $dompdf = $pdf->getDomPDF();
+        $options = $dompdf->getOptions();
+        $options->setIsRemoteEnabled(true);
+        $options->setIsHtml5ParserEnabled(true);
+        
+        // Set paper orientation
+        $pdf->setPaper('a4', 'landscape');
+        
+        // Log PDF export information
+        $this->logPdfExportInfo('Mengekspor data komputer ke PDF', [
+            'jumlah_komputers' => count($komputers),
+            'filename' => "{$filename}.pdf",
         ]);
         
         return $pdf->download("{$filename}.pdf");
+    }
+
+    /**
+     * Helper method for logging PDF export process
+     */
+    private function logPdfExportInfo($message, $data = [])
+    {
+        \Illuminate\Support\Facades\Log::channel('daily')->info('PDF Export: ' . $message, $data);
     }
 
     /**
@@ -312,6 +389,7 @@ class KomputerController extends Controller
     private function getHeaderRow($columns)
     {
         $headerMap = [
+            'nomor_urut' => 'No',
             'kode_barang' => 'Kode Barang',
             'nama_komputer' => 'Nama Komputer',
             'ruangan' => 'Ruangan',
@@ -319,7 +397,13 @@ class KomputerController extends Controller
             'spesifikasi' => 'Spesifikasi',
             'kondisi' => 'Kondisi',
             'penggunaan' => 'Penggunaan',
-            'tanggal_pengadaan' => 'Tanggal Pengadaan'
+            'tanggal_pengadaan' => 'Tanggal Pengadaan',
+            'latest_maintenance_date' => 'Tanggal Maintenance Terakhir',
+            'latest_maintenance_type' => 'Jenis Maintenance Terakhir',
+            'latest_maintenance_technician' => 'Teknisi Terakhir',
+            'latest_maintenance_result' => 'Hasil Maintenance Terakhir',
+            'latest_maintenance_cost' => 'Biaya Maintenance Terakhir',
+            'barcode' => 'Barcode'
         ];
         
         $headers = [];
@@ -334,13 +418,25 @@ class KomputerController extends Controller
 
     /**
      * Helper to format data row based on selected columns
+     * @param object $komputer The komputer object
+     * @param array $columns The columns to include
+     * @param string $format The export format (excel, pdf, csv)
+     * @return array
      */
-    private function formatDataRow($komputer, $columns)
+    private function formatDataRow($komputer, $columns, $format = 'excel', $index = null)
     {
         $row = [];
         
+        // Get the latest maintenance record if it exists
+        $latestMaintenance = $komputer->maintenanceHistories->first();
+        
         foreach ($columns as $column) {
             switch ($column) {
+                case 'nomor_urut':
+                    // If index is provided, use it for row number
+                    // Otherwise just use 0 as placeholder (will be replaced later)
+                    $row[] = isset($index) ? ($index + 1) : '—'; 
+                    break;
                 case 'kode_barang':
                     $row[] = $komputer->kode_barang;
                     break;
@@ -365,9 +461,89 @@ class KomputerController extends Controller
                 case 'tanggal_pengadaan':
                     $row[] = $komputer->tahun_pengadaan;
                     break;
+                case 'latest_maintenance_date':
+                    $row[] = $latestMaintenance ? $latestMaintenance->created_at->format('d M Y') : 'Belum pernah';
+                    break;
+                case 'latest_maintenance_type':
+                    $row[] = $latestMaintenance ? $latestMaintenance->jenis_maintenance : 'Belum pernah';
+                    break;
+                case 'latest_maintenance_technician':
+                    $row[] = $latestMaintenance ? $latestMaintenance->teknisi : 'Belum pernah';
+                    break;
+                case 'latest_maintenance_result':
+                    $row[] = $latestMaintenance ? $latestMaintenance->hasil_maintenance : 'Belum pernah';
+                    break;
+                case 'latest_maintenance_cost':
+                    $row[] = $latestMaintenance ? 
+                        ($latestMaintenance->biaya_maintenance ? $latestMaintenance->biaya_maintenance : 'Tidak ada biaya') : 
+                        'Belum pernah';
+                    break;
+                case 'barcode':
+                    // Handle barcode differently for each format
+                    if ($komputer->barcode) {
+                        if ($format === 'csv') {
+                            // Untuk CSV hanya tampilkan nama file tanpa path
+                            $row[] = 'Barcode: ' . basename($komputer->barcode);
+                        } else if ($format === 'pdf') {
+                            // Untuk PDF, path lengkap akan diproses di view
+                            $row[] = $komputer->barcode;
+                        } else {
+                            // Untuk Excel dan format lain
+                            $row[] = basename($komputer->barcode);
+                        }
+                    } else {
+                        $row[] = 'Tidak ada barcode';
+                    }
+                    break;
             }
         }
         
         return $row;
+    }
+
+    /**
+     * Helper untuk mencari file barcode di beberapa kemungkinan lokasi
+     */
+    private function findBarcodeFile($relativePath)
+    {
+        // Log untuk debugging
+        \Illuminate\Support\Facades\Log::info("Mencari barcode dengan path relatif: " . $relativePath);
+        
+        // Ambil nama file dari path
+        if (strpos($relativePath, '/') !== false) {
+            $filename = basename($relativePath);
+        } else {
+            $filename = $relativePath; // Path relatif sudah berupa nama file
+        }
+        
+        // Daftar kemungkinan path lengkap, dengan prioritas pada lokasi yang Anda sebutkan
+        $possiblePaths = [
+            // PRIORITAS 1: Path relatif lengkap
+            storage_path('app/public/' . $relativePath),
+            public_path('storage/' . $relativePath),
+            
+            // PRIORITAS 2: Lokasi di direktori barcode
+            storage_path('app/public/barcode/' . $filename),
+            public_path('storage/barcode/' . $filename),
+            
+            // PRIORITAS 3: Path alternatif lain
+            storage_path('app/public/barcode/' . $filename),
+            public_path('storage/public/barcode/' . $filename),
+            storage_path('app/' . $relativePath),
+            public_path($relativePath),
+            base_path('storage/app/public/' . $relativePath),
+            base_path('public/storage/' . $relativePath),
+        ];
+        
+        foreach ($possiblePaths as $path) {
+            \Illuminate\Support\Facades\Log::info("Mencoba path: " . $path);
+            if (file_exists($path)) {
+                \Illuminate\Support\Facades\Log::info("Barcode ditemukan di: " . $path);
+                return $path;
+            }
+        }
+        
+        \Illuminate\Support\Facades\Log::warning("Barcode tidak ditemukan di semua path yang dicek");
+        return null;
     }
 }

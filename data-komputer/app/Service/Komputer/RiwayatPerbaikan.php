@@ -2,6 +2,7 @@
 
 namespace App\Service\Komputer;
 
+use App\Models\Komputer;
 use App\Models\RiwayatPerbaikanKomputer;
 use Illuminate\Http\Request;
 
@@ -13,6 +14,39 @@ class RiwayatPerbaikan
     public function __construct()
     {
         //
+    }
+
+    public function getFilteredRiwayat(array $filters, int $perPage, $kode_barang)
+    {
+        // Ambil data komputer sekali saja
+        $komputer = Komputer::where('kode_barang', $kode_barang)->firstOrFail();
+
+        // Ambil semua riwayat milik komputer ini
+        $query = RiwayatPerbaikanKomputer::where('asset_id', $komputer->id);
+
+        // Filter keyword
+        if (!empty($filters['keyword'])) {
+            $keyword = $filters['keyword'];
+            $query->where(function ($q) use ($keyword) {
+                $q->where('jenis_maintenance', 'like', "%{$keyword}%")
+                    ->orWhere('teknisi', 'like', "%{$keyword}%")
+                    ->orWhere('keterangan', 'like', "%{$keyword}%");
+            });
+        }
+
+        // Filter jenis maintenance
+        if (!empty($filters['jenis'])) {
+            $query->where('jenis_maintenance', $filters['jenis']);
+        }
+
+        // Ambil riwayat dengan pagination
+        $riwayat = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        // Kembalikan komputer + riwayat
+        return [
+            'komputer' => $komputer,
+            'riwayats' => $riwayat,
+        ];
     }
 
     public function validationStore(Request $request)

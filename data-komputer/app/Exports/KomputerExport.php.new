@@ -8,12 +8,11 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use Illuminate\Support\Facades\Log;
 
-class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithDrawings, WithColumnWidths, WithEvents
+class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithDrawings, WithColumnWidths
 {
     protected $komputers;
     protected $columns;
@@ -28,8 +27,8 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
 
     public function collection()
     {
-        return collect($this->komputers)->map(function ($komputer, $index) {
-            return $this->formatDataRow($komputer, $this->columns, $index);
+        return collect($this->komputers)->map(function ($komputer) {
+            return $this->formatDataRow($komputer, $this->columns);
         });
     }
 
@@ -73,24 +72,11 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                         $drawing->setName('Barcode ' . $komputer->kode_barang);
                         $drawing->setDescription('Barcode ' . $komputer->kode_barang);
                         $drawing->setPath($barcodeFile);
-                        // Set ukuran yang lebih kecil agar pas di dalam sel
-                        $drawing->setHeight(45);
-                        $drawing->setWidth(90);
-                        
-                        // Pastikan koordinat tepat untuk sel yang dituju
-                        // barcodeColumnIndex sesuai dengan posisi barcode di array columns
-                        $column = $this->getExcelColumn($barcodeColumnIndex);
-                        $row = $index + 2; // +2 karena header berada di baris 1
-                        $cellCoordinate = $column . $row;
-                        
-                        $drawing->setCoordinates($cellCoordinate);
-                        // Sesuaikan offset untuk posisi dalam sel - posisi di tengah sel
-                        $drawing->setOffsetX(10);
+                        $drawing->setHeight(60);
+                        $drawing->setWidth(120);
+                        $drawing->setCoordinates($this->getExcelColumn($barcodeColumnIndex) . ($index + 2)); // +2 karena header berada di baris 1
+                        $drawing->setOffsetX(5);
                         $drawing->setOffsetY(5);
-                        // Atur tipe koordinat untuk barcode agar tetap dalam sel
-                        $drawing->setResizeProportional(true);
-                        
-                        Log::info("Barcode drawing akan diletakkan pada sel: {$cellCoordinate}");
                         
                         $drawings[] = $drawing;
                     } else {
@@ -125,27 +111,15 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
     
     public function columnWidths(): array
     {
-        // Menentukan lebar kolom untuk semua kolom yang perlu disesuaikan
+        // Menentukan lebar kolom (terutama untuk kolom barcode)
         $widths = [];
         
-        // Atur lebar untuk kolom umum yang mungkin terlalu sempit
-        foreach ($this->columns as $index => $column) {
-            $columnLetter = $this->getExcelColumn($index);
-            
-            // Atur lebar berdasarkan jenis kolom
-            if ($column === 'nomor_urut') {
-                // Kolom nomor cukup sempit
-                $widths[$columnLetter] = 8;
-            } else if ($column === 'barcode') {
-                // Lebar khusus untuk kolom barcode agar gambar muat dengan baik
-                $widths[$columnLetter] = 25;
-            } elseif ($column === 'spesifikasi') {
-                // Kolom spesifikasi biasanya berisi teks panjang
-                $widths[$columnLetter] = 40;
-            } elseif ($column === 'latest_maintenance_result') {
-                // Kolom hasil maintenance juga bisa panjang
-                $widths[$columnLetter] = 30;
-            }
+        // Mencari posisi kolom barcode
+        if (in_array('barcode', $this->columns)) {
+            $barcodeIndex = array_search('barcode', $this->columns);
+            $barcodePosition = $this->getExcelColumn($barcodeIndex);
+            // Atur lebar kolom barcode
+            $widths[$barcodePosition] = 25; // lebar dalam karakter
         }
         
         return $widths;
@@ -154,7 +128,6 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
     private function getHeaderRow($columns)
     {
         $headerMap = [
-            'nomor_urut' => 'No',
             'kode_barang' => 'Kode Barang',
             'nama_komputer' => 'Nama Komputer',
             'ruangan' => 'Ruangan',
@@ -182,7 +155,7 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
         return $headers;
     }
 
-    private function formatDataRow($komputer, $columns, $index = null)
+    private function formatDataRow($komputer, $columns)
     {
         $row = [];
         
@@ -191,9 +164,6 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
         
         foreach ($columns as $column) {
             switch ($column) {
-                case 'nomor_urut':
-                    $row[] = isset($index) ? ($index + 1) : '—';
-                    break;
                 case 'kode_barang':
                     $row[] = $komputer->kode_barang;
                     break;
@@ -243,9 +213,9 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
                     $row[] = $latestMaintenance ? 'Rp ' . number_format($latestMaintenance->biaya_maintenance, 0, ',', '.') : 'Belum ada';
                     break;
                 case 'barcode':
-                    // Untuk kolom barcode, gunakan spasi kosong karena gambar akan ditempatkan dengan WithDrawings
+                    // Tambahkan informasi barcode sebagai teks pendukung
                     if ($komputer->barcode) {
-                        $row[] = ''; // Sel kosong karena gambar ditambahkan dengan WithDrawings
+                        $row[] = basename($komputer->barcode); // Tampilkan nama file barcode
                     } else {
                         $row[] = 'Tidak ada barcode';
                     }
@@ -300,39 +270,5 @@ class KomputerExport implements FromCollection, WithHeadings, ShouldAutoSize, Wi
         
         Log::warning("Barcode tidak ditemukan di semua path yang dicek");
         return null;
-    }
-    
-    /**
-     * Implements AfterSheet to apply additional formatting to barcode column
-     *
-     * @return array
-     */
-    public function registerEvents(): array
-    {
-        return [
-            \Maatwebsite\Excel\Events\AfterSheet::class => function(\Maatwebsite\Excel\Events\AfterSheet $event) {
-                if (in_array('barcode', $this->columns)) {
-                    $barcodeIndex = array_search('barcode', $this->columns);
-                    $barcodeColumn = $this->getExcelColumn($barcodeIndex);
-                    
-                    // Get the worksheet
-                    $sheet = $event->sheet->getDelegate();
-                    
-                    // Set row height for all rows with barcode images to ensure they fit
-                    for ($i = 2; $i <= count($this->komputers) + 1; $i++) {
-                        // Atur tinggi baris yang lebih besar untuk mengakomodasi gambar barcode
-                        $sheet->getRowDimension($i)->setRowHeight(70);
-                    }
-                    
-                    // Set text alignment for barcode column
-                    $lastRow = count($this->komputers) + 1;
-                    $range = $barcodeColumn . '2:' . $barcodeColumn . $lastRow;
-                    
-                    $sheet->getStyle($range)->getAlignment()
-                          ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
-                          ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                }
-            },
-        ];
     }
 }
