@@ -118,6 +118,7 @@ class RiwayatPerbaikanKomputerSeeder extends Seeder
                     'komponen_diganti' => $replacedComponents,
                     'biaya_maintenance' => $cost,
                     'hasil_maintenance' => $maintenanceResult,
+                    'uuid' => \Illuminate\Support\Str::uuid()->toString(),
                     'rekomendasi' => $recommendation,
                 ]);
             }

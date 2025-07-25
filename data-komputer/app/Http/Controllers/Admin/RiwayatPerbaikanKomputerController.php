@@ -35,9 +35,9 @@ class RiwayatPerbaikanKomputerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request, $kode_barang)
+    public function index(Request $request, $uuid)
     {
-        $filter = $this->riwayatPerbaikan->getFilteredRiwayat($request->all(), 10, $kode_barang);
+        $filter = $this->riwayatPerbaikan->getFilteredRiwayat($request->all(), 10, $uuid);
         
         // Get unique maintenance types for filter dropdown
         $jenis_maintenance = RiwayatPerbaikanKomputer::where('asset_id', $filter['komputer']->id)
@@ -56,7 +56,7 @@ class RiwayatPerbaikanKomputerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, $id_komputer)
+    public function store(Request $request, $uuid_komputer)
     {
         
         DB::beginTransaction();
@@ -64,11 +64,11 @@ class RiwayatPerbaikanKomputerController extends Controller
             // Create new maintenance record
             $validated = $this->riwayatPerbaikan->validationStore($request);
 
-            $this->riwayatPerbaikan->store($validated, $id_komputer);
+            $this->riwayatPerbaikan->store($validated, $uuid_komputer);
             
             DB::commit();
             return redirect()
-                ->route('komputer.riwayat.index', $request->get('kode_barang'))
+                ->route('komputer.riwayat.index', $uuid_komputer)
                 ->with('success', 'Riwayat perbaikan berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -82,18 +82,18 @@ class RiwayatPerbaikanKomputerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $kode_barang, $id_riwayat)
+    public function update(Request $request, $komputer_uuid, $riwayat_uuid)
     {
         DB::beginTransaction();
         try {
             
             $validated = $this->riwayatPerbaikan->validationUpdate($request);
             
-            $this->riwayatPerbaikan->update($validated, $id_riwayat);
+            $this->riwayatPerbaikan->update($validated, $riwayat_uuid);
 
             DB::commit();
             return redirect()
-                ->route('komputer.riwayat.index', $request->get('kode_barang'))
+                ->route('komputer.riwayat.index', $komputer_uuid)
                 ->with('success', 'Riwayat perbaikan berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -107,15 +107,14 @@ class RiwayatPerbaikanKomputerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($kode_barang, $riwayat_id)
+    public function destroy($komputer_uuid, $riwayat_uuid)
     {
         try {
-            // Find and delete the maintenance record
-            $riwayat = RiwayatPerbaikanKomputer::findOrFail($riwayat_id);
-            $riwayat->delete();
+            // Use the service to delete the maintenance record
+            $this->riwayatPerbaikan->destroy($riwayat_uuid);
             
             return redirect()
-                ->route('komputer.riwayat.index', $kode_barang)
+                ->route('komputer.riwayat.index', $komputer_uuid)
                 ->with('success', 'Riwayat perbaikan berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()
@@ -127,10 +126,10 @@ class RiwayatPerbaikanKomputerController extends Controller
     /**
      * Export maintenance history
      */
-    public function export(Request $request, $kode_barang)
+    public function export(Request $request, $uuid)
     {
         // Get computer data first with gallery images
-        $komputer = Komputer::where('kode_barang', $kode_barang)->with('galleries')->firstOrFail();
+        $komputer = Komputer::where('uuid', $uuid)->with('galleries')->firstOrFail();
         
         // Set explicit default columns for maintenance history
         $defaultColumns = [
@@ -171,7 +170,7 @@ class RiwayatPerbaikanKomputerController extends Controller
         
         // Format timestamp for filename
         $timestamp = now()->format('Ymd_His');
-        $filename = "riwayat_pemeliharaan_{$kode_barang}_{$timestamp}";
+        $filename = "riwayat_pemeliharaan_{$uuid}_{$timestamp}";
         
         // Create export based on requested format
         switch ($format) {

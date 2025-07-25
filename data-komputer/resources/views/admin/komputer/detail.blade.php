@@ -206,15 +206,21 @@
             <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0">
                 <div class="btn-toolbar" role="toolbar">
                     <div class="btn-group me-2" role="group">
-                        <a href="{{ route('komputer.edit', $komputer->kode_barang) }}" class="btn btn-outline-primary">
+                        <a href="{{ route('komputer.edit', $komputer->uuid) }}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil-square"></i> Edit Data
                         </a>
-                        <a href="{{ route('komputer.riwayat.index', $komputer->kode_barang) }}" class="btn btn-outline-success" >
+                        <a href="{{ route('komputer.riwayat.index', $komputer->uuid) }}" class="btn btn-outline-success" >
                             <i class="bi bi-tools"></i> Riwayat Perbaikan
                         </a>
+                        <form action="{{ route('komputer.regenerate-qrcode', $komputer->uuid) }}" method="POST" class="d-inline ms-2">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-dark">
+                                <i class="bi bi-qr-code"></i> Regenerate QR Code
+                            </button>
+                        </form>
                     </div>
                     <div class="btn-group" role="group">
-                        <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST"
+                        <form action="{{ route('komputer.destroy', $komputer->uuid) }}" method="POST"
                             onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                             @csrf
                             @method('DELETE')
@@ -546,7 +552,8 @@
                     <div class="card-body text-center">
                         <div class="qr-container mb-3">
                             <img src="{{ asset('storage/' . $komputer->barcode) }}"
-                                alt="Barcode {{ $komputer->kode_barang }}" class="img-fluid">
+                                alt="Barcode {{ $komputer->uuid }}" class="img-fluid">
+                            <p class="mt-2 text-muted small">Scan untuk detail aset {{ $komputer->barcode }}</p>
                         </div>
                         <div class="d-flex justify-content-center">
                             <button class="btn btn-outline-primary" id="printBarcode">
@@ -641,7 +648,7 @@
                 <form action="{{ route('pemeliharaan.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
-                        <input type="hidden" name="asset_id" value="{{ $komputer->id }}">
+                        <input type="hidden" name="asset_uuid" value="{{ $komputer->uuid }}">
                         <div class="mb-3">
                             <label for="tanggal" class="form-label">Tanggal</label>
                             <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}"

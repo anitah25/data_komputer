@@ -134,15 +134,15 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li><a class="dropdown-item"
-                                                        href="{{ route('komputer.show', $komputer->kode_barang) }}"><i
+                                                        href="{{ route('komputer.show', $komputer->uuid) }}"><i
                                                             class="bi bi-eye"></i> Detail</a></li>
                                                 @can ('superadmin', auth()->user())
                                                     <li><a class="dropdown-item"
-                                                            href="{{ route('komputer.edit', $komputer->kode_barang) }}"><i
+                                                            href="{{ route('komputer.edit', $komputer->uuid) }}"><i
                                                                 class="bi bi-pencil"></i> Edit</a></li>
                                                 @endcan
                                                 <li><a class="dropdown-item"
-                                                        href="{{ route('komputer.riwayat.index', $komputer->kode_barang) }}"><i
+                                                        href="{{ route('komputer.riwayat.index', $komputer->uuid) }}"><i
                                                             class="bi bi-tools"></i> Riwayat Perbaikan</a></li>
                                                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
                                                         data-bs-target="#barcodeModal-{{ $komputer->kode_barang }}"><i
@@ -151,7 +151,7 @@
                                                     <hr class="dropdown-divider">
                                                 </li>
                                                 <li>
-                                                    <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST"
+                                                    <form action="{{ route('komputer.destroy', $komputer->uuid) }}" method="POST"
                                                         class="d-inline"
                                                         onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                                         @csrf

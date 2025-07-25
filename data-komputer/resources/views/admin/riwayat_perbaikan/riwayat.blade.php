@@ -22,7 +22,7 @@
                 </p>
             </div>
             <div class="col-md-6 d-flex justify-content-md-end align-items-center">
-                <a href="{{ route('komputer.show', $komputer->kode_barang) }}" class="btn btn-outline-secondary me-2">
+                <a href="{{ route('komputer.show', $komputer->uuid) }}" class="btn btn-outline-secondary me-2">
                     <i class="bi bi-arrow-left"></i> Kembali ke Detail
                 </a>
                 <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahRiwayatModal">
@@ -33,7 +33,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <form class="row mb-3" action="{{ route('komputer.riwayat.index', $komputer->kode_barang) }}" method="GET">
+                <form class="row mb-3" action="{{ route('komputer.riwayat.index', $komputer->uuid) }}" method="GET">
                     <div class="col-md-4 mb-2 mb-md-0">
                         <div class="d-flex">
                             <div class="input-group">
@@ -63,7 +63,7 @@
                                     </select>
                                 </div>
                                 @if(request('keyword') || request('jenis'))
-                                    <a href="{{ route('komputer.riwayat.index', $komputer->kode_barang) }}"
+                                    <a href="{{ route('komputer.riwayat.index', $komputer->uuid) }}"
                                         class="btn btn-outline-secondary" title="Reset filter">
                                         <i class="bi bi-x-circle"></i>
                                     </a>
@@ -78,19 +78,19 @@
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->kode_barang, 'format' => 'excel'] + request()->query()) }}">
+                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->uuid, 'format' => 'excel'] + request()->query()) }}">
                                                 <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export Excel
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->kode_barang, 'format' => 'pdf'] + request()->query()) }}">
+                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->uuid, 'format' => 'pdf'] + request()->query()) }}">
                                                 <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Export PDF
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->kode_barang, 'format' => 'csv'] + request()->query()) }}">
+                                                href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->uuid, 'format' => 'csv'] + request()->query()) }}">
                                                 <i class="bi bi-file-earmark-text me-2 text-primary"></i> Export CSV
                                             </a>
                                         </li>
@@ -128,14 +128,14 @@
                                             <ul class="dropdown-menu">
                                                 <li>
                                                     <a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                                        data-bs-target="#detailModal-{{ $item->id }}">
+                                                        data-bs-target="#detailModal-{{ $item->uuid }}">
                                                         <i class="bi bi-eye"></i> Detail
                                                     </a>
                                                 </li>
                                                 @can ('superadmin', auth()->user())
                                                     <li>
                                                         <a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                                            data-bs-target="#editModal-{{ $item->id }}">
+                                                            data-bs-target="#editModal-{{ $item->uuid }}">
                                                             <i class="bi bi-pencil"></i> Edit
                                                         </a>
                                                     </li>
@@ -144,7 +144,7 @@
                                                     </li>
                                                     <li>
                                                         <form
-                                                            action="{{ route('komputer.riwayat.destroy', [$komputer->kode_barang, $item->id]) }}"
+                                                            action="{{ route('komputer.riwayat.destroy', [$komputer->uuid, $item->uuid]) }}"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat perbaikan ini?')">
                                                             @csrf
@@ -159,12 +159,12 @@
                                         </div>
 
                                         <!-- Detail Modal -->
-                                        <div class="modal fade" id="detailModal-{{ $item->id }}" tabindex="-1"
-                                            aria-labelledby="detailModalLabel-{{ $item->id }}" aria-hidden="true">
+                                        <div class="modal fade" id="detailModal-{{ $item->uuid }}" tabindex="-1"
+                                            aria-labelledby="detailModalLabel-{{ $item->uuid }}" aria-hidden="true">
                                             <div class="modal-dialog modal-lg">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="detailModalLabel-{{ $item->id }}">
+                                                        <h5 class="modal-title" id="detailModalLabel-{{ $item->uuid }}">
                                                             Detail Riwayat Perbaikan
                                                         </h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
@@ -250,33 +250,33 @@
                                         </div>
 
                                         <!-- Edit Modal -->
-                                        <div class="modal fade" id="editModal-{{ $item->id }}" tabindex="-1"
-                                            aria-labelledby="editModalLabel-{{ $item->id }}" aria-hidden="true">
+                                        <div class="modal fade" id="editModal-{{ $item->uuid }}" tabindex="-1"
+                                            aria-labelledby="editModalLabel-{{ $item->uuid }}" aria-hidden="true">
                                             <div class="modal-dialog modal-lg">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="editModalLabel-{{ $item->id }}">
+                                                        <h5 class="modal-title" id="editModalLabel-{{ $item->uuid }}">
                                                             Edit Riwayat Perbaikan
                                                         </h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                             aria-label="Close"></button>
                                                     </div>
                                                     <form
-                                                        action="{{ route('komputer.riwayat.update', [$komputer->kode_barang, $item->id]) }}"
+                                                        action="{{ route('komputer.riwayat.update', [$komputer->uuid, $item->uuid]) }}"
                                                         method="POST">
                                                         @csrf
                                                         @method('PUT')
-                                                        <input type="hidden" name="kode_barang"
-                                                            value="{{ $komputer->kode_barang }}">
+                                                        <input type="hidden" name="uuid"
+                                                            value="{{ $komputer->uuid }}">
                                                         <div class="modal-body">
                                                             <div class="row mb-3">
                                                                 <div class="col-md-6">
                                                                     <div class="mb-3">
-                                                                        <label for="edit_jenis_maintenance_{{ $item->id }}"
+                                                                        <label for="edit_jenis_maintenance_{{ $item->uuid }}"
                                                                             class="form-label">Jenis Maintenance <span
                                                                                 class="text-danger">*</span></label>
                                                                         <select class="form-select"
-                                                                            id="edit_jenis_maintenance_{{ $item->id }}"
+                                                                            id="edit_jenis_maintenance_{{ $item->uuid }}"
                                                                             name="jenis_maintenance" required>
                                                                             <option value="">Pilih jenis maintenance</option>
                                                                             <option value="Perbaikan Hardware" {{ $item->jenis_maintenance == 'Perbaikan Hardware' ? 'selected' : '' }}>Perbaikan Hardware</option>
@@ -287,28 +287,28 @@
                                                                         </select>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label for="edit_teknisi_{{ $item->id }}"
+                                                                        <label for="edit_teknisi_{{ $item->uuid }}"
                                                                             class="form-label">Teknisi <span
                                                                                 class="text-danger">*</span></label>
                                                                         <input type="text" class="form-control"
-                                                                            id="edit_teknisi_{{ $item->id }}" name="teknisi"
+                                                                            id="edit_teknisi_{{ $item->uuid }}" name="teknisi"
                                                                             value="{{ $item->teknisi }}" required>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label for="edit_komponen_diganti_{{ $item->id }}"
+                                                                        <label for="edit_komponen_diganti_{{ $item->uuid }}"
                                                                             class="form-label">Komponen yang Diganti</label>
                                                                         <input type="text" class="form-control"
-                                                                            id="edit_komponen_diganti_{{ $item->id }}"
+                                                                            id="edit_komponen_diganti_{{ $item->uuid }}"
                                                                             name="komponen_diganti"
                                                                             value="{{ $item->komponen_diganti }}">
                                                                         <div class="form-text">Kosongkan jika tidak ada komponen
                                                                             yang diganti</div>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label for="edit_biaya_maintenance_{{ $item->id }}"
+                                                                        <label for="edit_biaya_maintenance_{{ $item->uuid }}"
                                                                             class="form-label">Biaya Maintenance (Rp)</label>
                                                                         <input type="number" class="form-control"
-                                                                            id="edit_biaya_maintenance_{{ $item->id }}"
+                                                                            id="edit_biaya_maintenance_{{ $item->uuid }}"
                                                                             name="biaya_maintenance"
                                                                             value="{{ $item->biaya_maintenance }}">
                                                                         <div class="form-text">Kosongkan jika tidak ada biaya
@@ -317,11 +317,11 @@
                                                                 </div>
                                                                 <div class="col-md-6">
                                                                     <div class="mb-3">
-                                                                        <label for="edit_hasil_maintenance_{{ $item->id }}"
+                                                                        <label for="edit_hasil_maintenance_{{ $item->uuid }}"
                                                                             class="form-label">Hasil Maintenance <span
                                                                                 class="text-danger">*</span></label>
                                                                         <select class="form-select"
-                                                                            id="edit_hasil_maintenance_{{ $item->id }}"
+                                                                            id="edit_hasil_maintenance_{{ $item->uuid }}"
                                                                             name="hasil_maintenance" required>
                                                                             <option value="">Pilih hasil maintenance</option>
                                                                             <option value="Berhasil" {{ $item->hasil_maintenance == 'Berhasil' ? 'selected' : '' }}>Berhasil</option>
@@ -330,21 +330,21 @@
                                                                         </select>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label for="edit_keterangan_{{ $item->id }}"
+                                                                        <label for="edit_keterangan_{{ $item->uuid }}"
                                                                             class="form-label">Keterangan <span
                                                                                 class="text-danger">*</span></label>
                                                                         <textarea class="form-control"
-                                                                            id="edit_keterangan_{{ $item->id }}"
+                                                                            id="edit_keterangan_{{ $item->uuid }}"
                                                                             name="keterangan" rows="3"
                                                                             required>{{ $item->keterangan }}</textarea>
                                                                         <div class="form-text">Jelaskan permasalahan dan
                                                                             tindakan yang dilakukan</div>
                                                                     </div>
                                                                     <div class="mb-3">
-                                                                        <label for="edit_rekomendasi_{{ $item->id }}"
+                                                                        <label for="edit_rekomendasi_{{ $item->uuid }}"
                                                                             class="form-label">Rekomendasi</label>
                                                                         <textarea class="form-control"
-                                                                            id="edit_rekomendasi_{{ $item->id }}"
+                                                                            id="edit_rekomendasi_{{ $item->uuid }}"
                                                                             name="rekomendasi"
                                                                             rows="3">{{ $item->rekomendasi }}</textarea>
                                                                         <div class="form-text">Rekomendasi untuk pemeliharaan ke

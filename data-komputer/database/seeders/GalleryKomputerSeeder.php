@@ -56,6 +56,7 @@ class GalleryKomputerSeeder extends Seeder
                     'asset_id' => $komputer->id,
                     'image_path' => $imagePath,
                     'image_type' => $imageType,
+                    'uuid' => \Illuminate\Support\Str::uuid()->toString(),
                 ]);
             }
         }

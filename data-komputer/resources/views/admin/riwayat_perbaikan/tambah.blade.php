@@ -7,9 +7,9 @@
                 <h5 class="modal-title" id="tambahRiwayatModalLabel">Tambah Riwayat Perbaikan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ route('komputer.riwayat.store', $komputer->id) }}" method="POST">
+            <form action="{{ route('komputer.riwayat.store', $komputer->uuid) }}" method="POST">
                 @csrf
-                <input type="hidden" name="kode_barang" value="{{ $komputer->kode_barang }}">
+                <input type="hidden" name="uuid" value="{{ $komputer->uuid }}">
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">

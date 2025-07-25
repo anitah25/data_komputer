@@ -33,11 +33,12 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <form id="formEditPerangkat" action="{{ route('komputer.update', $komputer->id) }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                <form id="formEditPerangkat" action="{{ route('komputer.update', $komputer->uuid) }}" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
                     @csrf
                     @method('PUT')
 
                     <input type="hidden" name="old_kode_barang" value="{{ $komputer->kode_barang }}">
+                    {{-- <input type="hidden" name="uuid" value="{{ $komputer->uuid }}"> --}}
 
                     <div class="row mb-4">
                         <div class="col-md-6">

@@ -51,4 +51,9 @@ class KomputerGetData
             return Komputer::where('kode_barang', $kode_barang)->with('galleries')->firstOrFail();
         });
     }
+    
+    public function getByUuid(string $uuid)
+    {
+        return Komputer::where('uuid', $uuid)->with('galleries')->firstOrFail();
+    }
 }

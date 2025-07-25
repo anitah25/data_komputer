@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class RiwayatPerbaikanKomputer extends Model
 {
@@ -17,6 +18,7 @@ class RiwayatPerbaikanKomputer extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
         'asset_id',
         'jenis_maintenance',
         'keterangan',
@@ -26,6 +28,26 @@ class RiwayatPerbaikanKomputer extends Model
         'hasil_maintenance',
         'rekomendasi',
     ];
+    
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($model) {
+            $model->uuid = (string) Str::uuid();
+        });
+    }
+    
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
 
     /**
      * Get the computer asset that this maintenance history belongs to.

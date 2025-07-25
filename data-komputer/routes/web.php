@@ -42,3 +42,13 @@ Route::prefix("admin")->middleware(['auth'])->group(function () {
     // Route::delete('/admin/komputer/{komputer}/riwayat-perbaikan/{riwayat}', [RiwayatPerbaikanKomputerController::class, 'destroy'])
     //     ->name('riwayat-perbaikan.destroy');
 });
+
+// Regenerate QR code for a komputer
+Route::post('/admin/komputer/{uuid}/regenerate-qrcode', [App\Http\Controllers\Admin\KomputerController::class, 'regenerateQrCode'])
+    ->name('komputer.regenerate-qrcode')
+    ->middleware(['auth']);
+
+// Public scan route - This route allows scanning the barcode to view computer details without requiring login
+Route::get('/scan/{uuid}', [App\Http\Controllers\Admin\KomputerController::class, 'scan'])
+    ->name('komputer.scan')
+    ->withoutMiddleware(['auth']);

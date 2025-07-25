@@ -161,6 +161,7 @@ class KomputerSeeder extends Seeder
                 'penggunaan_sekarang' => $penggunaan,
                 'ruangan_id' => $ruanganId,
                 'barcode' => $barcodePath,
+                'uuid' => \Illuminate\Support\Str::uuid()->toString(),
             ]);
         }
     }

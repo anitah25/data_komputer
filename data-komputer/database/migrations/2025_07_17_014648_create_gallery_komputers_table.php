@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('gallery_komputers', function (Blueprint $table) {
             $table->id();
+            $table->uuid('uuid')->unique();
             $table->foreignId('asset_id')->constrained('komputers')->onDelete('cascade');
             $table->string('image_path');
             $table->string('image_type');

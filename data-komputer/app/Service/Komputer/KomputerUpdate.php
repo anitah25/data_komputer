@@ -21,14 +21,17 @@ class KomputerUpdate
     /**
      * Validate the update input.
      */
-    public function validateInput(Request $request, $id)
+    public function validateInput(Request $request, $uuid)
     {
+        // Find the komputer by UUID first to get the ID
+        // $komputer = Komputer::where('uuid', $uuid)->firstOrFail();
+        
         $validated = $request->validate([
             'kode_barang' => [
                 'required', 
                 'string', 
                 'max:50',
-                Rule::unique('komputers')->ignore($id, 'id')
+                Rule::unique('komputers')->ignore($uuid, 'uuid')
             ],
             'nama_komputer' => 'required|string|max:100',
             'merek_komputer' => 'required|string|max:50',
@@ -47,6 +50,7 @@ class KomputerUpdate
             'foto.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:gallery_komputers,id',
+            'uuid' => 'sometimes|nullable|uuid',
         ]);
 
         return $validated;
@@ -60,8 +64,9 @@ class KomputerUpdate
         // Update the computer data
         $komputer->update($data);
 
-        // Clear cache for this computer
+        // Clear cache for this computer (both UUID and kode_barang based caches)
         Cache::forget('komputer_' . $komputer->kode_barang);
+        Cache::forget('komputer_uuid_' . $komputer->uuid);
         Cache::forget('ruangan_list');
 
         return $komputer;

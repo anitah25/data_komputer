@@ -71,10 +71,21 @@ class KomputerController extends Controller
         try {
             // validasi data
             $validated = $this->komputerStore->validateInput($request);
-
-            // generate barcode
-            $barcode = $this->komputerStore->generateQRCode($validated['kode_barang']);
+            
+            // Generate UUID first
+            $uuid = \Illuminate\Support\Str::uuid()->toString();
+            $validated['uuid'] = $uuid;
+            
+            // Get ruangan name for barcode
+            $ruangan = \App\Models\Ruangan::find($validated['ruangan_id']);
+            $validated['ruangan_name'] = $ruangan ? $ruangan->nama_ruangan : 'Tidak ditentukan';
+            
+            // generate barcode using UUID and komputer data
+            $barcode = $this->komputerStore->generateQRCode($uuid, $validated);
             $validated['barcode'] = $barcode;
+            
+            // Add user ID from the session or use a default value
+            $validated['user_id'] = auth()->check() ? auth()->user()->id : 1;
 
             // simpan data komputer
             $komputer = $this->komputerStore->storeKomputer($validated);
@@ -101,20 +112,20 @@ class KomputerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $kode_barang)
+    public function show(string $uuid)
     {
         return view('admin.komputer.detail', [
-            'komputer' => $this->komputerGetData->getByKodeBarang($kode_barang),
+            'komputer' => $this->komputerGetData->getByUuid($uuid),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $kode_barang)
+    public function edit(string $uuid)
     {
         return view('admin.komputer.edit', [
-            'komputer' => $this->komputerGetData->getByKodeBarang($kode_barang),
+            'komputer' => $this->komputerGetData->getByUuid($uuid),
             'ruangans' => $this->komputerGetData->getUniqueRuangan()
         ]);
     }
@@ -122,19 +133,18 @@ class KomputerController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $uuid)
     {
         DB::beginTransaction();
         try {
-            $validated = $this->komputerUpdate->validateInput($request, $id);
+            $validated = $this->komputerUpdate->validateInput($request, $uuid);
 
-            if ($request->get('old_kode_barang') != $validated['kode_barang']) {
-                // Generate new QR code if kode_barang has changed
-                $barcode = $this->komputerStore->generateQRCode($validated['kode_barang']);
-                $validated['barcode'] = $barcode;
-            }
+            $komputer = Komputer::where('uuid', $uuid)->firstOrFail();
+            
+            // Generate barcode with UUID - for updates, we use the existing data
+            $barcode = $this->komputerStore->generateQRCode($uuid);
+            $validated['barcode'] = $barcode;
 
-            $komputer = Komputer::findOrFail($id);
             $komputer = $this->komputerUpdate->updateKomputer($komputer, $validated);
 
             $this->komputerUpdate->handleGallery($komputer, $request);
@@ -159,11 +169,11 @@ class KomputerController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $uuid)
     {
         DB::beginTransaction();
         try {
-            $komputer = Komputer::findOrFail($id);
+            $komputer = Komputer::where('uuid', $uuid)->firstOrFail();
 
             // Delete all gallery images associated with this computer
             foreach ($komputer->galleries as $gallery) {
@@ -545,5 +555,74 @@ class KomputerController extends Controller
         
         \Illuminate\Support\Facades\Log::warning("Barcode tidak ditemukan di semua path yang dicek");
         return null;
+    }
+
+    /**
+     * Show computer details from barcode scan
+     * This is a public route that doesn't require authentication
+     * 
+     * @param string $uuid
+     * @return \Illuminate\View\View
+     */
+    public function scan(string $uuid)
+    {
+        // Get computer data with related models (galleries, riwayat_perbaikan, ruangan)
+        $komputer = Komputer::where('uuid', $uuid)
+            ->with(['galleries', 'ruangan', 'riwayatPerbaikan' => function($query) {
+                $query->orderBy('created_at', 'desc');
+            }])
+            ->firstOrFail(); // This will automatically throw 404 if not found
+        
+        // Generate QR code text content for display
+        $qrTextContent = "Cek Online: " . config('app.url') . "/scan/{$uuid}\n\n";
+        
+        // Detail Komputer
+        $qrTextContent .= "DETAIL KOMPUTER\n";
+        $qrTextContent .= "Nama Komputer: {$komputer->nama_komputer}\n";
+        $qrTextContent .= "Kode Aset: {$komputer->kode_barang}\n";
+        $qrTextContent .= "Merek: {$komputer->merek_komputer}\n";
+        $qrTextContent .= "Pengguna: " . ($komputer->nama_pengguna_sekarang ?? 'Tidak ditentukan') . "\n";
+        $qrTextContent .= "Ruangan: {$komputer->ruangan->nama_ruangan}\n\n";
+        
+        // Kondisi Komputer
+        $qrTextContent .= "KONDISI KOMPUTER\n";
+        $qrTextContent .= "Kondisi: {$komputer->kondisi_komputer}\n";
+        $qrTextContent .= "Keterangan: {$komputer->keterangan_kondisi}\n";
+        $qrTextContent .= "Processor: {$komputer->spesifikasi_processor}\n";
+        $qrTextContent .= "RAM: {$komputer->spesifikasi_ram}\n";
+        $qrTextContent .= "Storage: {$komputer->spesifikasi_penyimpanan}\n\n";
+        
+        // Riwayat Pemeliharaan
+        $qrTextContent .= "RIWAYAT PEMELIHARAAN\n";
+        if ($komputer->riwayatPerbaikan->count() > 0) {
+            foreach ($komputer->riwayatPerbaikan->take(2) as $index => $riwayat) {
+                $qrTextContent .= "# Pemeliharaan " . ($index + 1) . "\n";
+                $qrTextContent .= "Tanggal: " . $riwayat->created_at->format('d/m/Y') . "\n";
+                $qrTextContent .= "Jenis: {$riwayat->jenis_maintenance}\n";
+                $qrTextContent .= "Teknisi: {$riwayat->teknisi}\n";
+                $qrTextContent .= "Hasil: {$riwayat->hasil_maintenance}\n";
+                $qrTextContent .= "\n";
+            }
+        } else {
+            $qrTextContent .= "Belum ada riwayat pemeliharaan\n";
+        }
+        
+        return view('admin.komputer.scan', [
+            'komputer' => $komputer,
+            'qrTextContent' => $qrTextContent,
+        ]);
+    }
+
+    /**
+     * Regenerate QR code for a komputer.
+     */
+    public function regenerateQrCode(Request $request, $uuid)
+    {
+        $komputer = \App\Models\Komputer::where('uuid', $uuid)->firstOrFail();
+        // Regenerate QR code with latest data
+        $barcode = $this->komputerStore->generateQRCode($uuid);
+        $komputer->barcode = $barcode;
+        $komputer->save();
+        return back()->with('success', 'QR code berhasil digenerate ulang.');
     }
 }

@@ -16,10 +16,10 @@ class RiwayatPerbaikan
         //
     }
 
-    public function getFilteredRiwayat(array $filters, int $perPage, $kode_barang)
+    public function getFilteredRiwayat(array $filters, int $perPage, $uuid)
     {
         // Ambil data komputer sekali saja
-        $komputer = Komputer::where('kode_barang', $kode_barang)->firstOrFail();
+        $komputer = Komputer::where('uuid', $uuid)->firstOrFail();
 
         // Ambil semua riwayat milik komputer ini
         $query = RiwayatPerbaikanKomputer::where('asset_id', $komputer->id);
@@ -75,19 +75,32 @@ class RiwayatPerbaikan
         ]);
     }
 
-    public function store($data, $id_komputer)
+    public function store($data, $uuid_komputer)
     {
-
-        $data['asset_id'] = $id_komputer;
+        // Find komputer by uuid
+        $komputer = Komputer::where('uuid', $uuid_komputer)->firstOrFail();
+        $data['asset_id'] = $komputer->id;
 
         $riwayat = RiwayatPerbaikanKomputer::create($data);
         return $riwayat;
     }
 
-    public function update($data, $id_riwayat)
+    public function update($data, $uuid_riwayat)
     {
-        $riwayat = RiwayatPerbaikanKomputer::findOrFail($id_riwayat);
+        $riwayat = RiwayatPerbaikanKomputer::where('uuid', $uuid_riwayat)->firstOrFail();
         $riwayat->update($data);
         return $riwayat;
+    }
+    
+    /**
+     * Delete a maintenance record
+     * 
+     * @param string $uuid_riwayat The UUID of the maintenance record to delete
+     * @return bool True if deletion was successful
+     */
+    public function destroy($uuid_riwayat)
+    {
+        $riwayat = RiwayatPerbaikanKomputer::where('uuid', $uuid_riwayat)->firstOrFail();
+        return $riwayat->delete();
     }
 }
