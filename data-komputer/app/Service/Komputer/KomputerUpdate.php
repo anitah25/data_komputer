@@ -25,11 +25,11 @@ class KomputerUpdate
     {
         // Find the komputer by UUID first to get the ID
         // $komputer = Komputer::where('uuid', $uuid)->firstOrFail();
-        
+
         $validated = $request->validate([
             'kode_barang' => [
-                'required', 
-                'string', 
+                'required',
+                'string',
                 'max:50',
                 Rule::unique('komputers')->ignore($uuid, 'uuid')
             ],
@@ -47,7 +47,12 @@ class KomputerUpdate
             'keterangan_kondisi' => 'required|string|max:255',
             'penggunaan_sekarang' => 'required|string|max:100',
             'ruangan_id' => 'required|exists:ruangans,id',
-            'foto.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10048',
+            'foto.*' => [
+                'nullable',
+                'file', // Menggunakan aturan 'file' yang lebih umum
+                'mimes:jpeg,png,jpg,gif,svg,pdf', // Menambahkan 'pdf' ke tipe file yang diizinkan
+                'max:10240' // Maksimal 10MB (10 * 1024 KB)
+            ],
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:gallery_komputers,id',
             'uuid' => 'sometimes|nullable|uuid',
@@ -92,11 +97,10 @@ class KomputerUpdate
             }
         }
 
-        // Handle new images
+        // Handle new files (images or PDFs)
         if ($request->hasFile('foto')) {
             $files = $request->file('foto');
 
-            // Ensure files is always treated as an array
             if (!is_array($files)) {
                 $files = [$files];
             }
@@ -105,9 +109,11 @@ class KomputerUpdate
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $path = $file->storeAs('komputers', $fileName, 'public');
 
-                // Save image data to gallery_komputers table
+                // Simpan data file ke tabel gallery_komputers
                 $komputer->galleries()->create([
                     'image_path' => $path,
+                    // Anda bisa menambahkan logika untuk membedakan tipe file jika perlu
+                    // 'file_type' => $file->getClientMimeType() 
                     'image_type' => 'front',
                 ]);
             }

@@ -625,4 +625,9 @@ class KomputerController extends Controller
         $komputer->save();
         return back()->with('success', 'QR code berhasil digenerate ulang.');
     }
+
+    public function scanQR()
+    {
+        return view('scan-barcode');
+    }
 }

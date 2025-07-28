@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KomputerController;
 use App\Http\Controllers\Admin\RiwayatPerbaikanKomputerController;
 use App\Http\Middleware\IsSuperAdmin;
 use Illuminate\Support\Facades\Route;
 
+
+Route::get('/', [KomputerController::class, 'scanQR'])->name('home');
 
 // Guest
 Route::middleware('guest')->group(function () {

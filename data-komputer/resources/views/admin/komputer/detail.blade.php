@@ -3,6 +3,7 @@
 @section('content')
 
     <style>
+        /* General styles from original file */
         .detail-card {
             transition: all 0.3s ease;
             border-radius: 12px;
@@ -39,43 +40,6 @@
             background-color: rgba(0, 0, 0, 0.03);
         }
 
-        .timeline {
-            position: relative;
-            padding-left: 30px;
-        }
-
-        .timeline-item {
-            position: relative;
-            padding-bottom: 20px;
-            padding-left: 15px;
-        }
-
-        .timeline-item:before {
-            content: "";
-            position: absolute;
-            left: -30px;
-            top: 0;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            z-index: 1;
-        }
-
-        .timeline-item:after {
-            content: "";
-            position: absolute;
-            left: -23px;
-            top: 16px;
-            height: 100%;
-            width: 2px;
-            background-color: #dee2e6;
-        }
-
-        .timeline-item:last-child:after {
-            display: none;
-        }
-
         .action-btn {
             transition: all 0.2s ease;
         }
@@ -103,24 +67,6 @@
             background-color: var(--primary-color);
         }
 
-        .device-image-container {
-            height: 300px;
-            overflow: hidden;
-            border-radius: 12px;
-            position: relative;
-        }
-
-        .device-image {
-            object-fit: cover;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.5s ease;
-        }
-
-        .device-image-container:hover .device-image {
-            transform: scale(1.05);
-        }
-
         .qr-container {
             padding: 15px;
             border: 2px dashed #dee2e6;
@@ -128,7 +74,7 @@
             text-align: center;
         }
 
-        /* Additional styles for gallery */
+        /* Gallery and Carousel Styles */
         .gallery-container {
             position: relative;
             border-radius: 12px;
@@ -137,8 +83,9 @@
         }
 
         .carousel-item {
-            height: 300px;
-            background-color: #f8f9fa;
+            height: 450px;
+            /* Increased height for better PDF view */
+            background-color: #e9ecef;
         }
 
         .carousel-item img {
@@ -147,11 +94,18 @@
             width: 100%;
         }
 
+        .carousel-item iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
         .thumbnails-container {
             display: flex;
             overflow-x: auto;
             gap: 8px;
-            padding: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
         }
 
         .thumbnail {
@@ -184,8 +138,11 @@
             opacity: 0.8;
         }
 
-        .carousel-indicators {
-            margin-bottom: 0.5rem;
+        /* New style for PDF thumbnails */
+        .pdf-thumbnail {
+            background-color: #fff;
+            border: 2px solid #dee2e6;
+            color: #dc3545;
         }
     </style>
 
@@ -204,22 +161,16 @@
                 <p class="text-muted">{{ $komputer->kode_barang }}</p>
             </div>
             <div class="col-md-6 d-flex justify-content-md-end mt-3 mt-md-0">
-                <div class="btn-toolbar" role="toolbar">
+                <div class="btn-toolbar gap-2" role="toolbar">
                     <div class="btn-group me-2" role="group">
                         <a href="{{ route('komputer.edit', $komputer->uuid) }}" class="btn btn-outline-primary">
                             <i class="bi bi-pencil-square"></i> Edit Data
                         </a>
-                        <a href="{{ route('komputer.riwayat.index', $komputer->uuid) }}" class="btn btn-outline-success" >
+                        <a href="{{ route('komputer.riwayat.index', $komputer->uuid) }}" class="btn btn-outline-success">
                             <i class="bi bi-tools"></i> Riwayat Perbaikan
                         </a>
-                        <form action="{{ route('komputer.regenerate-qrcode', $komputer->uuid) }}" method="POST" class="d-inline ms-2">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-dark">
-                                <i class="bi bi-qr-code"></i> Regenerate QR Code
-                            </button>
-                        </form>
                     </div>
-                    <div class="btn-group" role="group">
+                    <div class="btn-group gap-2" role="group">
                         <form action="{{ route('komputer.destroy', $komputer->uuid) }}" method="POST"
                             onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                             @csrf
@@ -228,30 +179,60 @@
                                 <i class="bi bi-trash"></i> Hapus
                             </button>
                         </form>
+                        <form action="{{ route('komputer.regenerate-qrcode', $komputer->uuid) }}" method="POST"
+                            class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-dark">
+                                <i class="bi bi-qr-code"></i> Buat Ulang QR Code
+                            </button>
+                        </form>
+                        <div class="dropdown">
+                            <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-download me-1"></i> Export
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown" style="z-index: 10000;">
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->uuid, 'format' => 'excel'] + request()->query()) }}">
+                                        <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export Excel
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('komputer.riwayat.export', ['komputer' => $komputer->uuid, 'format' => 'pdf'] + request()->query()) }}">
+                                        <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Export PDF
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-md-8">
-                <!-- Gallery section with carousel -->
+            <div class="col-lg-8">
                 <div class="gallery-container mb-4">
                     @if($komputer->galleries->isNotEmpty())
                         <div id="komputerGallery" class="carousel slide" data-bs-ride="false">
-                            <div class="carousel-indicators">
-                                @foreach($komputer->galleries as $index => $gallery)
-                                    <button type="button" data-bs-target="#komputerGallery" data-bs-slide-to="{{ $index }}"
-                                        class="{{ $index == 0 ? 'active' : '' }}"
-                                        aria-current="{{ $index == 0 ? 'true' : 'false' }}" aria-label="Slide {{ $index + 1 }}">
-                                    </button>
-                                @endforeach
-                            </div>
                             <div class="carousel-inner">
                                 @foreach($komputer->galleries as $index => $gallery)
+                                    @php
+                                        // Cek ekstensi file
+                                        $extension = strtolower(pathinfo($gallery->image_path, PATHINFO_EXTENSION));
+                                        $isPdf = $extension === 'pdf';
+                                    @endphp
                                     <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                        <img src="{{ asset('storage/' . $gallery->image_path) }}"
-                                            alt="{{ $komputer->nama_komputer }} - Photo {{ $index + 1 }}" class="d-block w-100">
+                                        @if($isPdf)
+                                            {{-- Tampilkan PDF menggunakan iframe --}}
+                                            <iframe src="{{ asset('storage/' . $gallery->image_path) }}"
+                                                title="PDF Viewer: {{ $komputer->nama_komputer }}"></iframe>
+                                        @else
+                                            {{-- Tampilkan gambar seperti biasa --}}
+                                            <img src="{{ asset('storage/' . $gallery->image_path) }}"
+                                                alt="{{ $komputer->nama_komputer }} - File {{ $index + 1 }}" class="d-block w-100">
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -267,32 +248,42 @@
                             </button>
                             <div class="position-absolute bottom-0 end-0 p-3">
                                 <span class="badge rounded-pill bg-dark bg-opacity-75">
-                                    <i class="bi bi-images"></i> {{ $komputer->galleries->count() }} Foto
+                                    <i class="bi bi-files"></i> {{ $komputer->galleries->count() }} File Media
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Thumbnails navigation -->
                         <div class="thumbnails-container">
                             @foreach($komputer->galleries as $index => $gallery)
-                                <img src="{{ asset('storage/' . $gallery->image_path) }}"
-                                    class="thumbnail {{ $index == 0 ? 'active' : '' }}" data-bs-target="#komputerGallery"
-                                    data-bs-slide-to="{{ $index }}" alt="Thumbnail {{ $index + 1 }}">
+                                @php
+                                    $extension = strtolower(pathinfo($gallery->image_path, PATHINFO_EXTENSION));
+                                    $isPdf = $extension === 'pdf';
+                                @endphp
+
+                                @if($isPdf)
+                                    {{-- Thumbnail untuk PDF --}}
+                                    <div class="thumbnail pdf-thumbnail d-flex align-items-center justify-content-center {{ $index == 0 ? 'active' : '' }}"
+                                        data-bs-target="#komputerGallery" data-bs-slide-to="{{ $index }}">
+                                        <i class="bi bi-file-earmark-pdf fs-2"></i>
+                                    </div>
+                                @else
+                                    {{-- Thumbnail untuk Gambar --}}
+                                    <img src="{{ asset('storage/' . $gallery->image_path) }}"
+                                        class="thumbnail {{ $index == 0 ? 'active' : '' }}" data-bs-target="#komputerGallery"
+                                        data-bs-slide-to="{{ $index }}" alt="Thumbnail {{ $index + 1 }}">
+                                @endif
                             @endforeach
                         </div>
                     @else
-                        <div class="device-image-container">
-                            <img src="https://via.placeholder.com/800x600/0d6efd/ffffff?text={{ $komputer->nama_komputer }}"
-                                alt="{{ $komputer->nama_komputer }}" class="device-image">
-                            <div class="position-absolute bottom-0 end-0 p-3">
-                                <span class="badge rounded-pill bg-dark bg-opacity-75">
-                                    <i class="bi bi-camera"></i> Tidak Ada Foto
-                                </span>
+                        {{-- Fallback jika tidak ada media sama sekali --}}
+                        <div class="carousel-item active d-flex align-items-center justify-content-center">
+                            <div class="text-center">
+                                <i class="bi bi-camera-reels fs-1 text-muted"></i>
+                                <p class="mt-2 text-muted">Tidak ada file media yang tersedia</p>
                             </div>
                         </div>
                     @endif
                 </div>
-
                 <div class="card detail-card mb-4">
                     <div class="card-header bg-white">
                         <h4 class="mb-0"><i class="bi bi-info-circle text-primary"></i> Informasi Umum</h4>
@@ -357,30 +348,21 @@
                                                 'Kurang Sesuai' => 'bg-warning text-dark',
                                                 'Tidak Sesuai' => 'bg-danger'
                                             ];
-
-                                            $kesesuaianText = [
-                                                'Sangat Sesuai' => 'Sangat Sesuai',
-                                                'Sesuai' => 'Sesuai',
-                                                'Kurang Sesuai' => 'Kurang Sesuai',
-                                                'Tidak Sesuai' => 'Tidak Sesuai'
-                                            ];
                                         @endphp
                                         <span
                                             class="badge {{ $kesesuaianClass[$komputer->kesesuaian_pc] ?? 'bg-secondary' }}">
-                                            {{ $kesesuaianText[$komputer->kesesuaian_pc] ?? 'Tidak Diketahui' }}
+                                            {{ $komputer->kesesuaian_pc ?? 'Tidak Diketahui' }}
                                         </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                         <hr>
-
                         <div class="spec-item">
                             <div class="spec-icon">
-                                <i class="bi bi-activity"></i>
+                                <i class="bi bi-tags"></i>
                             </div>
-                            <div class="w-100">
+                            <div>
                                 <small class="text-muted d-block">Merek Komputer</small>
                                 <strong>{{ $komputer->merek_komputer }}</strong>
                             </div>
@@ -396,57 +378,41 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="spec-item">
-                                    <div class="spec-icon">
-                                        <i class="bi bi-cpu"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">Processor</small>
-                                        <strong>{{ $komputer->spesifikasi_processor }}</strong>
+                                    <div class="spec-icon"><i class="bi bi-cpu"></i></div>
+                                    <div><small
+                                            class="text-muted d-block">Processor</small><strong>{{ $komputer->spesifikasi_processor }}</strong>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="spec-item">
-                                    <div class="spec-icon">
-                                        <i class="bi bi-memory"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">RAM</small>
-                                        <strong>{{ $komputer->spesifikasi_ram }}</strong>
+                                    <div class="spec-icon"><i class="bi bi-memory"></i></div>
+                                    <div><small
+                                            class="text-muted d-block">RAM</small><strong>{{ $komputer->spesifikasi_ram }}</strong>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="spec-item">
-                                    <div class="spec-icon">
-                                        <i class="bi bi-gpu-card"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">VGA</small>
-                                        <strong>{{ $komputer->spesifikasi_vga }}</strong>
+                                    <div class="spec-icon"><i class="bi bi-gpu-card"></i></div>
+                                    <div><small
+                                            class="text-muted d-block">VGA</small><strong>{{ $komputer->spesifikasi_vga ?? 'N/A' }}</strong>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="spec-item">
-                                    <div class="spec-icon">
-                                        <i class="bi bi-hdd"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">Penyimpanan</small>
-                                        <strong>{{ $komputer->spesifikasi_penyimpanan }}</strong>
+                                    <div class="spec-icon"><i class="bi bi-hdd"></i></div>
+                                    <div><small
+                                            class="text-muted d-block">Penyimpanan</small><strong>{{ $komputer->spesifikasi_penyimpanan }}</strong>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="spec-item">
-                                    <div class="spec-icon">
-                                        <i class="bi bi-windows"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted d-block">Sistem Operasi</small>
-                                        <strong>{{ $komputer->sistem_operasi }}</strong>
-                                    </div>
+                                    <div class="spec-icon"><i class="bi bi-windows"></i></div>
+                                    <div><small class="text-muted d-block">Sistem
+                                            Operasi</small><strong>{{ $komputer->sistem_operasi }}</strong></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -464,18 +430,10 @@
                                                 'Kurang' => 'bg-warning text-dark',
                                                 'Rusak' => 'bg-danger'
                                             ];
-
-                                            $kondisiText = [
-                                                'Sangat Baik' => 'Sangat Baik',
-                                                'Baik' => 'Baik',
-                                                'Cukup' => 'Cukup',
-                                                'Kurang' => 'Kurang',
-                                                'Rusak' => 'Rusak'
-                                            ];
                                         @endphp
                                         <span
                                             class="badge {{ $kondisiClass[$komputer->kondisi_komputer] ?? 'bg-secondary' }}">
-                                            {{ $kondisiText[$komputer->kondisi_komputer] ?? 'Tidak Diketahui' }}
+                                            {{ $komputer->kondisi_komputer ?? 'Tidak Diketahui' }}
                                         </span>
                                     </div>
                                 </div>
@@ -483,9 +441,9 @@
                         </div>
 
                         @if(!empty($komputer->keterangan_kondisi))
-                            <div class="alert alert-light mt-3">
-                                <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Detail Kondisi:</h6>
-                                <p class="mb-0">{!! nl2br(e($komputer->keterangan_kondisi)) !!}</p>
+                            <div class="alert alert-light mt-3 border">
+                                <p class="mb-0"><i
+                                        class="bi bi-info-circle me-2"></i>{!! nl2br(e($komputer->keterangan_kondisi)) !!}</p>
                             </div>
                         @endif
                     </div>
@@ -493,13 +451,17 @@
                 <div class="card detail-card mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h4 class="mb-0"><i class="bi bi-clock-history text-primary"></i> Histori Pemeliharaan</h4>
-                        <a href="{{ route('komputer.riwayat.index', $komputer->id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle"></i> Lihat Selengkapnya
+                        <a href="{{ route('komputer.riwayat.index', $komputer->uuid) }}"
+                            class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-card-list"></i> Lihat Selengkapnya
                         </a>
                     </div>
                     <div class="card-body">
                         @if($komputer->maintenanceHistories->isEmpty())
-                            <p class="text-muted text-center">Belum ada data pemeliharaan</p>
+                            <div class="text-center p-3 text-muted">
+                                <i class="bi bi-folder-x fs-2"></i>
+                                <p class="mt-2 mb-0">Belum ada data pemeliharaan yang tercatat.</p>
+                            </div>
                         @else
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover">
@@ -512,10 +474,10 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($komputer->maintenanceHistories as $item)
+                                        @foreach($komputer->maintenanceHistories->take(5) as $item)
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                                                <td>{{ $item->keterangan }}</td>
+                                                <td>{{ Str::limit($item->keterangan, 50) }}</td>
                                                 <td>{{ $item->teknisi ?? '-' }}</td>
                                                 <td>{{ $item->hasil_maintenance ?? '-' }}</td>
                                             </tr>
@@ -527,180 +489,24 @@
                     </div>
                 </div>
 
-                <div class="card detail-card">
-                    <div class="card-header bg-white">
-                        <h4 class="mb-0"><i class="bi bi-file-earmark-text text-primary"></i> Informasi Tambahan</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted">Terakhir diperbarui</span>
-                            <span>{{ \Carbon\Carbon::parse($komputer->updated_at)->format('d M Y') }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted">Usia perangkat</span>
-                            <span>{{ date('Y') - intval($komputer->tahun_pengadaan) }} tahun</span>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card detail-card sticky-md-top mb-4" style="top: 20px; z-index: 1;">
+            <div class="col-lg-4">
+                <div class="card detail-card sticky-lg-top" style="top: 20px;">
                     <div class="card-header bg-white">
-                        <h4 class="mb-0"><i class="bi bi-upc-scan text-primary"></i> Identifikasi</h4>
+                        <h4 class="mb-0"><i class="bi bi-upc-scan text-primary"></i> Kode Aset</h4>
                     </div>
                     <div class="card-body text-center">
                         <div class="qr-container mb-3">
-                            <img src="{{ asset('storage/' . $komputer->barcode) }}"
-                                alt="Barcode {{ $komputer->uuid }}" class="img-fluid">
-                            <p class="mt-2 text-muted small">Scan untuk detail aset {{ $komputer->barcode }}</p>
-                        </div>
-                        <div class="d-flex justify-content-center">
-                            <button class="btn btn-outline-primary" id="printBarcode">
-                                <i class="bi bi-printer"></i> Cetak Barcode
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- QR Code Modal -->
-    <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">QR Code Perangkat</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <div class="d-inline-block p-3 bg-white">
-                        <img src="{{ asset('storage/qrcodes/' . $komputer->kode_barang . '.png') }}"
-                            alt="QR Code {{ $komputer->kode_barang }}" class="img-fluid">
-                    </div>
-                    <p class="mt-3">Scan QR code ini untuk melihat detail perangkat</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-primary" id="printQr">
-                        <i class="bi bi-printer"></i> Cetak QR Code
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Print Modal -->
-    <div class="modal fade" id="printModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Cetak Informasi Perangkat</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="list-group">
-                        <button type="button"
-                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                            id="printFullDetail">
-                            <div>
-                                <h6 class="mb-1">Detail Lengkap</h6>
-                                <small class="text-muted">Semua informasi perangkat</small>
-                            </div>
-                            <i class="bi bi-file-earmark-text"></i>
-                        </button>
-                        <button type="button"
-                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                            id="printSpecOnly">
-                            <div>
-                                <h6 class="mb-1">Spesifikasi Teknis</h6>
-                                <small class="text-muted">Hanya informasi spesifikasi perangkat</small>
-                            </div>
-                            <i class="bi bi-cpu"></i>
-                        </button>
-                        <button type="button"
-                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                            id="printHistoryOnly">
-                            <div>
-                                <h6 class="mb-1">Histori Pemeliharaan</h6>
-                                <small class="text-muted">Riwayat pemeliharaan perangkat</small>
-                            </div>
-                            <i class="bi bi-clock-history"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tambah Pemeliharaan Modal -->
-    {{-- <div class="modal fade" id="tambahPemeliharaanModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Tambah Catatan Pemeliharaan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ route('pemeliharaan.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <input type="hidden" name="asset_uuid" value="{{ $komputer->uuid }}">
-                        <div class="mb-3">
-                            <label for="tanggal" class="form-label">Tanggal</label>
-                            <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}"
-                                required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="keterangan" class="form-label">Keterangan</label>
-                            <textarea class="form-control" id="keterangan" name="keterangan" rows="3" required></textarea>
-                            <div class="form-text">Masukkan keterangan pemeliharaan yang dilakukan</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="teknisi" class="form-label">Teknisi/Petugas</label>
-                            <input type="text" class="form-control" id="teknisi" name="teknisi" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="hasil_maintenance" class="form-label">Hasil Pemeliharaan</label>
-                            <textarea class="form-control" id="hasil_maintenance" name="hasil_maintenance"
-                                rows="2"></textarea>
+                            @if($komputer->barcode && Storage::disk('public')->exists($komputer->barcode))
+                                <img src="{{ asset('storage/' . $komputer->barcode) }}" alt="Barcode {{ $komputer->uuid }}"
+                                    class="img-fluid">
+                                <p class="mt-2 text-muted small">Scan untuk melihat detail aset</p>
+                            @else
+                                <p class="text-danger my-4">QR Code belum dibuat. Silakan klik "Regenerate QR Code".</p>
+                            @endif
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    --}}
-    <!-- Delete Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger">Konfirmasi Hapus</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus data perangkat dengan kode barang
-                        <strong>{{ $komputer->kode_barang }}</strong>?
-                    </p>
-                    <p class="text-danger"><small>Tindakan ini tidak dapat dibatalkan.</small></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <form action="{{ route('komputer.destroy', $komputer->id) }}" method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash"></i> Hapus Perangkat
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>
@@ -708,18 +514,32 @@
 
     @push('scripts')
         <script>
-            $(document).ready(function () {
-                // Activate thumbnail on click
-                $('.thumbnail').click(function () {
-                    $('.thumbnail').removeClass('active');
-                    $(this).addClass('active');
-                });
+            document.addEventListener('DOMContentLoaded', function () {
+                const gallery = document.getElementById('komputerGallery');
+                if (gallery) {
+                    const thumbnails = document.querySelectorAll('.thumbnail');
 
-                // Update active thumbnail when carousel slides
-                $('#komputerGallery').on('slide.bs.carousel', function (e) {
-                    $('.thumbnail').removeClass('active');
-                    $('.thumbnail').eq(e.to).addClass('active');
-                });
+                    // Fungsi untuk mengaktifkan thumbnail
+                    function activateThumbnail(index) {
+                        thumbnails.forEach(thumb => thumb.classList.remove('active'));
+                        if (thumbnails[index]) {
+                            thumbnails[index].classList.add('active');
+                        }
+                    }
+
+                    // Event listener untuk klik thumbnail
+                    thumbnails.forEach(thumbnail => {
+                        thumbnail.addEventListener('click', function () {
+                            const slideIndex = this.getAttribute('data-bs-slide-to');
+                            activateThumbnail(slideIndex);
+                        });
+                    });
+
+                    // Event listener untuk slide carousel
+                    gallery.addEventListener('slide.bs.carousel', function (e) {
+                        activateThumbnail(e.to);
+                    });
+                }
             });
         </script>
     @endpush

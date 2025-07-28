@@ -43,7 +43,11 @@ class KomputerStore
             'barcode' => 'nullable|string|max:100|unique:komputers,barcode',
             'uuid' => 'nullable|uuid',
             'foto' => 'required|array',
-            'foto.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:10048', // Maksimal 10MB per foto
+            'foto.*' => [
+                'file', // Menambahkan validasi tipe file
+                'mimes:jpeg,png,jpg,gif,svg,pdf', // Menambahkan 'pdf' ke tipe yang diizinkan
+                'max:10240' // Maksimal 10MB
+            ],
         ]);
 
         return $validated;
@@ -53,7 +57,7 @@ class KomputerStore
     {
         // Path yang akan digunakan untuk menyimpan QR code
         $directory = 'barcode';
-        $filename = "{$uuid}.png";
+        $filename = "{$uuid}.jpg";
         $path = "{$directory}/{$filename}";
 
         // For existing computers, get the data from database

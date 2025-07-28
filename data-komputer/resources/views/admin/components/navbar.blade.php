@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" style="z-index: 10000;">
     <div class="container">
         <a class="navbar-brand" href="index.php">
             <i class="bi bi-pc-display"></i> SI-KOMPUTER ESDM

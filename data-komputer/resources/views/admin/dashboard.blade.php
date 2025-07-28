@@ -16,7 +16,7 @@
         </div>
     </div>
     <div class="col-lg-6 mt-4 mt-lg-0">
-        <img src="https://via.placeholder.com/600x400/0d6efd/ffffff?text=SI-KOMPUTER+ESDM" alt="Sistem Informasi Komputer" class="img-fluid rounded shadow">
+        <img src="{{ asset('assets/komputer.png') }}" alt="Sistem Informasi Komputer" class="img-fluid rounded">
     </div>
 </div>
 

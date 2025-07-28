@@ -17,9 +17,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             RuanganSeeder::class,
-            KomputerSeeder::class,
-            GalleryKomputerSeeder::class,
-            RiwayatPerbaikanKomputerSeeder::class,
+            // KomputerSeeder::class,
+            // GalleryKomputerSeeder::class,
+            // RiwayatPerbaikanKomputerSeeder::class,
         ]);
     }
 }
